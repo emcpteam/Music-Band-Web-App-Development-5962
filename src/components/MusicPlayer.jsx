@@ -151,10 +151,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 <span>{tracks[currentTrack]?.duration}</span>
               </div>
               <div className="theme-progress-bg">
-                <div 
-                  className="theme-progress"
-                  style={{ width: '35%' }}
-                />
+                <div className="theme-progress" style={{ width: '35%' }} />
               </div>
             </div>
 
@@ -270,25 +267,23 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                         onClick={() => handleTrackSelect(index)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${
                           currentTrack === index
-                            ? 'bg-gradient-to-r theme-gradient text-white border-2'
+                            ? 'text-white border-2'
                             : 'hover:bg-gray-50'
                         }`}
                         style={{
-                          background: currentTrack === index 
+                          backgroundImage: currentTrack === index 
                             ? `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))` 
                             : undefined,
-                          borderColor: currentTrack === index 
-                            ? 'var(--theme-primary)' 
-                            : 'transparent'
+                          borderColor: currentTrack === index ? 'var(--theme-primary)' : 'transparent'
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center space-x-4">
-                          <div 
+                          <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              currentTrack === index 
-                                ? 'bg-white/20 text-white' 
+                              currentTrack === index
+                                ? 'bg-white/20 text-white'
                                 : 'bg-gray-200 text-gray-600'
                             }`}
                           >
@@ -299,14 +294,14 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                             )}
                           </div>
                           <div className="text-left">
-                            <p 
+                            <p
                               className={`font-medium ${
                                 currentTrack === index ? 'text-white' : 'theme-text'
                               }`}
                             >
                               {track.title}
                             </p>
-                            <p 
+                            <p
                               className={`text-sm ${
                                 currentTrack === index ? 'text-white/80' : 'text-gray-600'
                               }`}
@@ -315,7 +310,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                             </p>
                           </div>
                         </div>
-                        <span 
+                        <span
                           className={`text-sm ${
                             currentTrack === index ? 'text-white/80' : 'text-gray-600'
                           }`}

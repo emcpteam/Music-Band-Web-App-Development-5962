@@ -17,16 +17,16 @@ const Hero = ({ onPlayClick }) => {
       {/* Background Pattern with theme colors */}
       <div className="absolute inset-0 opacity-10">
         <div 
-          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl"
-          style={{ backgroundColor: 'var(--theme-primary)' }}
+          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl" 
+          style={{ backgroundColor: 'var(--theme-primary)' }} 
         />
         <div 
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-          style={{ backgroundColor: 'var(--theme-secondary)' }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" 
+          style={{ backgroundColor: 'var(--theme-secondary)' }} 
         />
         <div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgroundColor: 'var(--theme-accent)' }}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl" 
+          style={{ backgroundColor: 'var(--theme-accent)' }} 
         />
       </div>
 
@@ -62,9 +62,11 @@ const Hero = ({ onPlayClick }) => {
               <SafeIcon icon={FiMusic} className="text-white text-xl" />
             </div>
             <h1 
-              className="text-4xl md:text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent theme-gradient"
-              style={{
-                backgroundImage: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`
+              className="text-4xl md:text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
+              style={{ 
+                backgroundImage: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}
             >
               {bandData.band.name}
@@ -91,13 +93,13 @@ const Hero = ({ onPlayClick }) => {
         </motion.button>
 
         {/* Floating Elements with theme colors */}
-        <motion.div 
+        <motion.div
           className="absolute top-20 left-10 w-20 h-20 rounded-full opacity-60"
           style={{ backgroundColor: 'var(--theme-primary)' }}
           animate={{ y: [0, -20, 0], rotate: [0, 180, 360] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-20 right-10 w-16 h-16 rounded-full opacity-60"
           style={{ backgroundColor: 'var(--theme-secondary)' }}
           animate={{ y: [0, 20, 0], rotate: [0, -180, -360] }}

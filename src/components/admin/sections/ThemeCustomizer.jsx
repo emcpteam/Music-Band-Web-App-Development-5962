@@ -35,57 +35,51 @@ const ThemeCustomizer = () => {
 
   // Apply theme changes immediately to CSS variables (live preview)
   useEffect(() => {
-    const root = document.documentElement;
-    
-    // Set CSS custom properties for live preview
-    root.style.setProperty('--theme-primary', theme.primaryColor);
-    root.style.setProperty('--theme-secondary', theme.secondaryColor);
-    root.style.setProperty('--theme-accent', theme.accentColor);
-    root.style.setProperty('--theme-background', theme.backgroundColor);
-    root.style.setProperty('--theme-text', theme.textColor);
-    root.style.setProperty('--theme-font-family', theme.fontFamily);
-
-    // Apply font family to body for live preview
-    document.body.style.fontFamily = theme.fontFamily;
-
-    // Create RGB values for transparency effects
-    const hexToRgb = (hex) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    };
-
-    const primaryRgb = hexToRgb(theme.primaryColor);
-    const secondaryRgb = hexToRgb(theme.secondaryColor);
-    const accentRgb = hexToRgb(theme.accentColor);
-
-    if (primaryRgb && secondaryRgb && accentRgb) {
-      root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
-      root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
-      root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+    if (theme) {
+      const root = document.documentElement;
+      
+      // Set CSS custom properties for live preview
+      root.style.setProperty('--theme-primary', theme.primaryColor);
+      root.style.setProperty('--theme-secondary', theme.secondaryColor);
+      root.style.setProperty('--theme-accent', theme.accentColor);
+      root.style.setProperty('--theme-background', theme.backgroundColor);
+      root.style.setProperty('--theme-text', theme.textColor);
+      root.style.setProperty('--theme-font-family', theme.fontFamily);
+      
+      // Apply font family to body for live preview
+      document.body.style.fontFamily = theme.fontFamily;
+      
+      // Create RGB values for transparency effects
+      const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null;
+      };
+      
+      const primaryRgb = hexToRgb(theme.primaryColor);
+      const secondaryRgb = hexToRgb(theme.secondaryColor);
+      const accentRgb = hexToRgb(theme.accentColor);
+      
+      if (primaryRgb && secondaryRgb && accentRgb) {
+        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+      }
+      
+      // Force re-render of components that use theme
+      window.dispatchEvent(new CustomEvent('themePreviewUpdate', { detail: { theme, timestamp: Date.now() } }));
     }
-
-    // Force re-render of components that use theme
-    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { 
-      detail: { theme, timestamp: Date.now() } 
-    }));
   }, [theme]);
 
   const handleColorChange = (field, value) => {
-    setTheme(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setTheme(prev => ({ ...prev, [field]: value }));
   };
 
   const applyPreset = (preset) => {
-    setTheme(prev => ({
-      ...prev,
-      ...preset
-    }));
+    setTheme(prev => ({ ...prev, ...preset }));
   };
 
   const handleSave = async () => {
@@ -112,9 +106,7 @@ const ThemeCustomizer = () => {
     // Force a re-render of the preview
     setLastSaved(Date.now());
     // Trigger theme update event
-    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { 
-      detail: { theme, timestamp: Date.now() } 
-    }));
+    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { detail: { theme, timestamp: Date.now() } }));
   };
 
   return (
@@ -170,18 +162,9 @@ const ThemeCustomizer = () => {
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex space-x-1">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.primaryColor }}
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.secondaryColor }}
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.accentColor }}
-                      />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primaryColor }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.secondaryColor }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accentColor }} />
                     </div>
                   </div>
                   <p className="text-sm font-medium text-gray-700">{preset.name}</p>
@@ -214,7 +197,6 @@ const ThemeCustomizer = () => {
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Secondary Color
@@ -235,7 +217,6 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -256,7 +237,6 @@ const ThemeCustomizer = () => {
                     />
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Text Color
@@ -306,12 +286,10 @@ const ThemeCustomizer = () => {
             <motion.button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
+              className="flex items-center space-x-2 px-6 py-3 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{
-                background: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-              }}
+              style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
             >
               <SafeIcon icon={FiSave} />
               <span>{isSaving ? 'Saving...' : 'Save Theme'}</span>
@@ -334,9 +312,9 @@ const ThemeCustomizer = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Live Preview</h2>
           <div 
             className="p-6 rounded-xl border-2 border-gray-200 min-h-[500px]"
-            style={{
-              background: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`,
-              fontFamily: theme.fontFamily
+            style={{ 
+              backgroundImage: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`,
+              fontFamily: theme.fontFamily 
             }}
             key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}`} // Force re-render on changes
           >
@@ -344,16 +322,11 @@ const ThemeCustomizer = () => {
             <div className="text-center mb-6">
               <div 
                 className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-                }}
+                style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
               >
                 <SafeIcon icon={FiPalette} className="text-white text-xl" />
               </div>
-              <h1 
-                className="text-2xl font-bold mb-2" 
-                style={{ color: theme.textColor }}
-              >
+              <h1 className="text-2xl font-bold mb-2" style={{ color: theme.textColor }}>
                 Band Name
               </h1>
               <p className="text-gray-600">Album Title - Preview</p>
@@ -363,9 +336,7 @@ const ThemeCustomizer = () => {
             <div className="space-y-3 mb-6">
               <button 
                 className="w-full py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg"
-                style={{
-                  background: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-                }}
+                style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
               >
                 Primary Button
               </button>
@@ -382,14 +353,11 @@ const ThemeCustomizer = () => {
               className="p-4 rounded-xl mb-4"
               style={{ backgroundColor: `${theme.primaryColor}10` }}
             >
-              <h3 
-                className="font-semibold mb-2"
-                style={{ color: theme.textColor }}
-              >
+              <h3 className="font-semibold mb-2" style={{ color: theme.textColor }}>
                 Sample Content
               </h3>
               <p style={{ color: theme.textColor }}>
-                This is how your text content will look with the selected theme colors and typography.
+                This is how your text content will look with the selected theme colors and typography. 
                 The font family applied is {theme.fontFamily}.
               </p>
             </div>
@@ -413,30 +381,34 @@ const ThemeCustomizer = () => {
               <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
                 <div 
                   className="h-2 rounded-full transition-all duration-300"
-                  style={{
-                    background: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
-                    width: '35%'
+                  style={{ 
+                    backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
+                    width: '35%' 
                   }}
                 />
               </div>
               <div className="flex justify-center space-x-4">
                 <button 
                   className="p-2 rounded-full"
-                  style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}
+                  style={{ 
+                    backgroundColor: `${theme.primaryColor}20`,
+                    color: theme.primaryColor 
+                  }}
                 >
                   ⏮
                 </button>
                 <button 
                   className="p-3 rounded-full text-white"
-                  style={{
-                    background: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-                  }}
+                  style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
                 >
                   ▶
                 </button>
                 <button 
                   className="p-2 rounded-full"
-                  style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}
+                  style={{ 
+                    backgroundColor: `${theme.primaryColor}20`,
+                    color: theme.primaryColor 
+                  }}
                 >
                   ⏭
                 </button>
