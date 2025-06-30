@@ -12,10 +12,10 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const { data } = useAdmin();
+  const { data, themeUpdateTrigger } = useAdmin();
   const theme = data?.theme;
 
-  // Apply theme to CSS custom properties
+  // Apply theme to CSS custom properties whenever theme changes
   useEffect(() => {
     if (theme) {
       const root = document.documentElement;
@@ -41,8 +41,10 @@ export const ThemeProvider = ({ children }) => {
         root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
         root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
       }
+
+      console.log('Theme applied:', theme); // Debug log
     }
-  }, [theme]);
+  }, [theme, themeUpdateTrigger]);
 
   // Helper function to convert hex to RGB
   const hexToRgb = (hex) => {
@@ -56,6 +58,7 @@ export const ThemeProvider = ({ children }) => {
 
   const value = {
     theme,
+    themeUpdateTrigger,
     applyTheme: (newTheme) => {
       // This will be handled by the admin context
       // The useEffect above will automatically apply changes

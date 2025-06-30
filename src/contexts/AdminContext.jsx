@@ -251,9 +251,55 @@ export const AdminProvider = ({ children }) => {
     return safeLocalStorage.getItem('adminAuth') === 'true';
   });
 
+  // Force theme updates to propagate globally
+  const [themeUpdateTrigger, setThemeUpdateTrigger] = useState(0);
+
   useEffect(() => {
     safeLocalStorage.setItem('bandAdminData', JSON.stringify(data));
   }, [data]);
+
+  // Apply theme changes immediately to CSS variables
+  useEffect(() => {
+    if (data.theme) {
+      const root = document.documentElement;
+      
+      // Set CSS custom properties
+      root.style.setProperty('--theme-primary', data.theme.primaryColor);
+      root.style.setProperty('--theme-secondary', data.theme.secondaryColor);
+      root.style.setProperty('--theme-accent', data.theme.accentColor);
+      root.style.setProperty('--theme-background', data.theme.backgroundColor);
+      root.style.setProperty('--theme-text', data.theme.textColor);
+      root.style.setProperty('--theme-font-family', data.theme.fontFamily);
+
+      // Apply font family to body
+      document.body.style.fontFamily = data.theme.fontFamily;
+
+      // Create RGB values for transparency effects
+      const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null;
+      };
+
+      const primaryRgb = hexToRgb(data.theme.primaryColor);
+      const secondaryRgb = hexToRgb(data.theme.secondaryColor);
+      const accentRgb = hexToRgb(data.theme.accentColor);
+
+      if (primaryRgb && secondaryRgb && accentRgb) {
+        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
+        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
+        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+      }
+
+      // Trigger a custom event to notify components of theme change
+      window.dispatchEvent(new CustomEvent('themeUpdated', { 
+        detail: { theme: data.theme, trigger: themeUpdateTrigger } 
+      }));
+    }
+  }, [data.theme, themeUpdateTrigger]);
 
   const login = (username, password) => {
     const credentials = data.adminCredentials;
@@ -282,6 +328,8 @@ export const AdminProvider = ({ children }) => {
       ...prev,
       theme: { ...prev.theme, ...themeUpdates }
     }));
+    // Force theme update trigger
+    setThemeUpdateTrigger(prev => prev + 1);
   };
 
   const updateTranslations = (newTranslations) => {
@@ -295,7 +343,10 @@ export const AdminProvider = ({ children }) => {
   const createAlbum = (album) => {
     try {
       const newAlbum = { ...album, id: Date.now(), isActive: true };
-      setData(prev => ({ ...prev, albums: [...prev.albums, newAlbum] }));
+      setData(prev => ({
+        ...prev,
+        albums: [...prev.albums, newAlbum]
+      }));
       return newAlbum;
     } catch (error) {
       console.error('Error creating album:', error);
@@ -331,7 +382,10 @@ export const AdminProvider = ({ children }) => {
   const createSong = (song) => {
     try {
       const newSong = { ...song, id: Date.now(), isActive: true };
-      setData(prev => ({ ...prev, songs: [...prev.songs, newSong] }));
+      setData(prev => ({
+        ...prev,
+        songs: [...prev.songs, newSong]
+      }));
       return newSong;
     } catch (error) {
       console.error('Error creating song:', error);
@@ -368,10 +422,13 @@ export const AdminProvider = ({ children }) => {
       const newPodcast = { 
         ...podcast, 
         id: Date.now(), 
-        isActive: true,
-        publishDate: new Date().toISOString().split('T')[0]
+        isActive: true, 
+        publishDate: new Date().toISOString().split('T')[0] 
       };
-      setData(prev => ({ ...prev, podcasts: [...prev.podcasts, newPodcast] }));
+      setData(prev => ({
+        ...prev,
+        podcasts: [...prev.podcasts, newPodcast]
+      }));
       return newPodcast;
     } catch (error) {
       console.error('Error creating podcast:', error);
@@ -406,7 +463,10 @@ export const AdminProvider = ({ children }) => {
   const createMedia = (media) => {
     try {
       const newMedia = { ...media, id: Date.now(), isActive: true };
-      setData(prev => ({ ...prev, media: [...prev.media, newMedia] }));
+      setData(prev => ({
+        ...prev,
+        media: [...prev.media, newMedia]
+      }));
       return newMedia;
     } catch (error) {
       console.error('Error creating media:', error);
@@ -441,7 +501,10 @@ export const AdminProvider = ({ children }) => {
   const createProduct = (product) => {
     try {
       const newProduct = { ...product, id: Date.now(), isActive: true };
-      setData(prev => ({ ...prev, products: [...prev.products, newProduct] }));
+      setData(prev => ({
+        ...prev,
+        products: [...prev.products, newProduct]
+      }));
       return newProduct;
     } catch (error) {
       console.error('Error creating product:', error);
@@ -545,13 +608,16 @@ export const AdminProvider = ({ children }) => {
       if (currentPassword !== data.adminCredentials.password) {
         return { success: false, error: 'Current password is incorrect' };
       }
+      
       if (newPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
+      
       setData(prev => ({
         ...prev,
         adminCredentials: { ...prev.adminCredentials, password: newPassword }
       }));
+      
       return { success: true };
     } catch (error) {
       console.error('Error changing password:', error);
@@ -581,15 +647,17 @@ export const AdminProvider = ({ children }) => {
       if (username !== data.adminCredentials.username) {
         return { success: false, error: 'Username not found' };
       }
+      
       const tempPassword = Math.random().toString(36).substring(2, 10);
       setData(prev => ({
         ...prev,
         adminCredentials: { ...prev.adminCredentials, password: tempPassword }
       }));
+      
       return { 
         success: true, 
         tempPassword,
-        message: `Temporary password: ${tempPassword}\nPlease change it after logging in.`
+        message: `Temporary password: ${tempPassword}\nPlease change it after logging in.` 
       };
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -627,7 +695,8 @@ export const AdminProvider = ({ children }) => {
     deleteMedia,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    themeUpdateTrigger
   };
 
   return (

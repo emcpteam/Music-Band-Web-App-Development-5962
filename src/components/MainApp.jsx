@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdmin } from '../contexts/AdminContext';
 import Hero from './Hero';
 import MusicPlayer from './MusicPlayer';
 import MultimediaBooklet from './MultimediaBooklet';
@@ -15,6 +16,7 @@ import TrackingCodes from './TrackingCodes';
 const MainApp = () => {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const { themeUpdateTrigger } = useAdmin();
   const audioRef = useRef(null);
 
   // Refs for navigation
@@ -25,12 +27,31 @@ const MainApp = () => {
   const fanWallRef = useRef(null);
   const merchRef = useRef(null);
 
+  // Listen for theme updates and force component re-render
+  useEffect(() => {
+    const handleThemeUpdate = () => {
+      // Force re-render by updating a state
+      setCurrentTrack(prev => prev); // Dummy state update to trigger re-render
+    };
+
+    window.addEventListener('themeUpdated', handleThemeUpdate);
+    window.addEventListener('themePreviewUpdate', handleThemeUpdate);
+
+    return () => {
+      window.removeEventListener('themeUpdated', handleThemeUpdate);
+      window.removeEventListener('themePreviewUpdate', handleThemeUpdate);
+    };
+  }, []);
+
   const scrollToSection = (sectionRef) => {
     sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-pastel font-poppins">
+    <div 
+      className="min-h-screen bg-gradient-pastel font-poppins"
+      key={themeUpdateTrigger} // Force re-render when theme changes
+    >
       {/* Analytics & Tracking Codes */}
       <TrackingCodes />
       
@@ -38,6 +59,7 @@ const MainApp = () => {
         onNavigate={scrollToSection} 
         refs={{ heroRef, musicRef, bookletRef, podcastRef, fanWallRef, merchRef }} 
       />
+      
       <UserProfile />
 
       <motion.div

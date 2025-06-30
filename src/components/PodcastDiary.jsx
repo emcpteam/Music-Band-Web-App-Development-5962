@@ -11,8 +11,8 @@ const PodcastDiary = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const audioRef = useRef(null);
-
   const bandData = useBandData();
+
   const episodes = bandData.podcasts.filter(podcast => podcast.isActive);
 
   const handlePlayPause = (episode) => {
@@ -44,6 +44,18 @@ const PodcastDiary = () => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleSpotifySubscribe = () => {
+    const spotifyUrl = bandData.band.socialLinks?.spotify || 'https://open.spotify.com/';
+    window.open(spotifyUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleAppleSubscribe = () => {
+    // Generate Apple Podcasts URL based on band name
+    const bandName = encodeURIComponent(bandData.band.name);
+    const appleUrl = `https://podcasts.apple.com/search?term=${bandName}`;
+    window.open(appleUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -96,7 +108,7 @@ const PodcastDiary = () => {
                     <span>{currentEpisode.duration}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
+                    <div 
                       className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-300"
                       style={{ width: '25%' }}
                     ></div>
@@ -137,9 +149,9 @@ const PodcastDiary = () => {
                   <div className="flex-shrink-0">
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-xl flex items-center justify-center">
-                        <SafeIcon
-                          icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay}
-                          className="text-white text-xl"
+                        <SafeIcon 
+                          icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay} 
+                          className="text-white text-xl" 
                         />
                       </div>
                       {episode.isNew && (
@@ -209,6 +221,7 @@ const PodcastDiary = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
               <motion.button
+                onClick={handleSpotifySubscribe}
                 className="px-8 py-3 bg-white text-green-600 rounded-full font-semibold hover:bg-gray-100 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -216,6 +229,7 @@ const PodcastDiary = () => {
                 Subscribe on Spotify
               </motion.button>
               <motion.button
+                onClick={handleAppleSubscribe}
                 className="px-8 py-3 bg-white/20 text-white rounded-full font-semibold hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

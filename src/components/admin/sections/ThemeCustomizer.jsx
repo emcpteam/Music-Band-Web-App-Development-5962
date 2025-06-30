@@ -33,11 +33,11 @@ const ThemeCustomizer = () => {
     { value: 'Source Sans Pro', label: 'Source Sans Pro (Clean)' }
   ];
 
-  // Apply theme changes immediately to CSS variables
+  // Apply theme changes immediately to CSS variables (live preview)
   useEffect(() => {
     const root = document.documentElement;
     
-    // Set CSS custom properties
+    // Set CSS custom properties for live preview
     root.style.setProperty('--theme-primary', theme.primaryColor);
     root.style.setProperty('--theme-secondary', theme.secondaryColor);
     root.style.setProperty('--theme-accent', theme.accentColor);
@@ -45,7 +45,7 @@ const ThemeCustomizer = () => {
     root.style.setProperty('--theme-text', theme.textColor);
     root.style.setProperty('--theme-font-family', theme.fontFamily);
 
-    // Apply font family to body
+    // Apply font family to body for live preview
     document.body.style.fontFamily = theme.fontFamily;
 
     // Create RGB values for transparency effects
@@ -67,6 +67,11 @@ const ThemeCustomizer = () => {
       root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
       root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
     }
+
+    // Force re-render of components that use theme
+    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { 
+      detail: { theme, timestamp: Date.now() } 
+    }));
   }, [theme]);
 
   const handleColorChange = (field, value) => {
@@ -106,6 +111,10 @@ const ThemeCustomizer = () => {
   const refreshPreview = () => {
     // Force a re-render of the preview
     setLastSaved(Date.now());
+    // Trigger theme update event
+    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { 
+      detail: { theme, timestamp: Date.now() } 
+    }));
   };
 
   return (
@@ -139,7 +148,7 @@ const ThemeCustomizer = () => {
             whileTap={{ scale: 0.95 }}
           >
             <SafeIcon icon={FiEye} />
-            <span>{previewMode ? 'Exit Preview' : 'Preview Mode'}</span>
+            <span>{previewMode ? 'Exit Preview' : 'Live Preview Active'}</span>
           </motion.button>
         </div>
       </div>
@@ -329,7 +338,7 @@ const ThemeCustomizer = () => {
               background: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`,
               fontFamily: theme.fontFamily
             }}
-            key={lastSaved} // Force re-render when lastSaved changes
+            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}`} // Force re-render on changes
           >
             {/* Preview Header */}
             <div className="text-center mb-6">
