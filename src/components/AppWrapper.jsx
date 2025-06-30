@@ -18,9 +18,9 @@ import ErrorBoundary from './ErrorBoundary'
 const AppWrapper = () => {
   return (
     <ErrorBoundary>
-      <QuestProvider 
-        apiKey={questConfig.APIKEY} 
-        entityId={questConfig.ENTITYID} 
+      <QuestProvider
+        apiKey={questConfig.APIKEY}
+        entityId={questConfig.ENTITYID}
         apiType="PRODUCTION"
       >
         <LanguageProvider>

@@ -10,7 +10,6 @@ import FanWall from './FanWall';
 import Merchandising from './Merchandising';
 import Footer from './Footer';
 import Navigation from './Navigation';
-import UserProfile from './UserProfile';
 import TrackingCodes from './TrackingCodes';
 
 const MainApp = () => {
@@ -59,8 +58,6 @@ const MainApp = () => {
         onNavigate={scrollToSection} 
         refs={{ heroRef, musicRef, bookletRef, podcastRef, fanWallRef, merchRef }} 
       />
-      
-      <UserProfile />
 
       <motion.div
         initial={{ opacity: 0 }}
