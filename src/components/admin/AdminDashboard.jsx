@@ -16,12 +16,27 @@ import FileUploadManager from './sections/FileUploadManager';
 import CommentModeration from './sections/CommentModeration';
 import AccountSettings from './sections/AccountSettings';
 import TranslationManager from './sections/TranslationManager';
+import SystemConfiguration from './sections/SystemConfiguration';
 import LanguageSelector from '../common/LanguageSelector';
 
-const { 
-  FiHome, FiSettings, FiPalette, FiMusic, FiMic, FiImage, FiShoppingBag, 
-  FiLogOut, FiMenu, FiX, FiDisc, FiHeadphones, FiUpload, FiMessageCircle, 
-  FiUser, FiGlobe 
+const {
+  FiHome,
+  FiSettings,
+  FiPalette,
+  FiMusic,
+  FiMic,
+  FiImage,
+  FiShoppingBag,
+  FiLogOut,
+  FiMenu,
+  FiX,
+  FiDisc,
+  FiHeadphones,
+  FiUpload,
+  FiMessageCircle,
+  FiUser,
+  FiGlobe,
+  FiTool
 } = FiIcons;
 
 const AdminDashboard = () => {
@@ -55,6 +70,7 @@ const AdminDashboard = () => {
     { id: 'uploads', label: ta('fileManager'), icon: FiUpload },
     { id: 'comments', label: ta('comments'), icon: FiMessageCircle },
     { id: 'translations', label: ta('translationManager'), icon: FiGlobe },
+    { id: 'config', label: 'System Config', icon: FiTool },
     { id: 'account', label: ta('accountSettings'), icon: FiUser }
   ];
 
@@ -87,6 +103,8 @@ const AdminDashboard = () => {
         return <CommentModeration />;
       case 'translations':
         return <TranslationManager />;
+      case 'config':
+        return <SystemConfiguration />;
       case 'account':
         return <AccountSettings />;
       default:
@@ -237,6 +255,13 @@ const AdminDashboard = () => {
               <span className="text-gray-700">{ta('moderateComments')}</span>
             </button>
             <button
+              onClick={() => setActiveSection('config')}
+              className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+            >
+              <SafeIcon icon={FiTool} className="text-purple-600" />
+              <span className="text-gray-700">System Configuration</span>
+            </button>
+            <button
               onClick={() => setActiveSection('translations')}
               className="w-full flex items-center space-x-3 p-3 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
             >
@@ -312,10 +337,18 @@ const AdminDashboard = () => {
               >
                 <SafeIcon icon={item.icon} className="text-lg" />
                 <span className="font-medium">{item.label}</span>
+                
                 {/* Show pending count for comments */}
                 {item.id === 'comments' && data.comments?.filter(c => c.status === 'pending').length > 0 && (
                   <span className="ml-auto bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
                     {data.comments.filter(c => c.status === 'pending').length}
+                  </span>
+                )}
+                
+                {/* Highlight new system config */}
+                {item.id === 'config' && (
+                  <span className="ml-auto bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    NEW
                   </span>
                 )}
               </motion.button>

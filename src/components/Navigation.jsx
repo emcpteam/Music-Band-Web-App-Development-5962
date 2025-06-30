@@ -6,8 +6,9 @@ import SafeIcon from '../common/SafeIcon';
 import { useBandData } from '../contexts/AdminContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from './common/LanguageSelector';
+import CartButton from './cart/CartButton';
 
-const { FiMenu, FiX, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiHome, FiShield } = FiIcons;
+const { FiMenu, FiX, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiHome, FiShield, FiGlobe } = FiIcons;
 
 const Navigation = ({ onNavigate, refs }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,10 +46,7 @@ const Navigation = ({ onNavigate, refs }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Band Name */}
-            <motion.div
-              className="flex items-center"
-              whileHover={{ scale: 1.05 }}
-            >
+            <motion.div className="flex items-center" whileHover={{ scale: 1.05 }}>
               <span className="font-semibold theme-text text-xl">{bandData.band.name}</span>
             </motion.div>
 
@@ -67,7 +65,10 @@ const Navigation = ({ onNavigate, refs }) => {
                   <span className="text-sm font-medium">{item.label}</span>
                 </motion.button>
               ))}
-
+              
+              {/* Cart Button - Desktop */}
+              <CartButton />
+              
               {/* Language Selector - Desktop */}
               <LanguageSelector />
 
@@ -85,17 +86,19 @@ const Navigation = ({ onNavigate, refs }) => {
             </div>
 
             {/* Mobile/Tablet Menu Button - Shows on tablet and mobile */}
-            <motion.button
-              className="xl:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setIsOpen(!isOpen)}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Toggle navigation menu"
-            >
-              <SafeIcon 
-                icon={isOpen ? FiX : FiMenu} 
-                className="text-2xl text-gray-600" 
-              />
-            </motion.button>
+            <div className="xl:hidden flex items-center space-x-3">
+              {/* Cart Button - Mobile/Tablet */}
+              <CartButton />
+              
+              <motion.button
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() => setIsOpen(!isOpen)}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Toggle navigation menu"
+              >
+                <SafeIcon icon={isOpen ? FiX : FiMenu} className="text-2xl text-gray-600" />
+              </motion.button>
+            </div>
           </div>
         </div>
 
@@ -117,15 +120,15 @@ const Navigation = ({ onNavigate, refs }) => {
                     onClick={() => handleNavItemClick(item.ref)}
                     className="flex items-center space-x-4 w-full px-4 py-3 text-gray-700 rounded-xl transition-all hover:bg-gray-100 active:bg-gray-200"
                     style={{
-                      '--hover-bg': 'rgba(var(--theme-primary-rgb), 0.1)',
+                      '--hover-bg': 'rgba(var(--theme-primary-rgb),0.1)',
                       '--hover-color': 'var(--theme-primary)'
                     }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{ 
+                    whileHover={{
                       x: 5,
-                      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)',
+                      backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)',
                       color: 'var(--theme-primary)'
                     }}
                     whileTap={{ scale: 0.98 }}
@@ -159,17 +162,23 @@ const Navigation = ({ onNavigate, refs }) => {
                   className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all border-t border-gray-200 mt-4 pt-4"
                   style={{
                     color: 'var(--theme-primary)',
-                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.05)'
+                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
                   }}
-                  whileHover={{ 
+                  whileHover={{
                     x: 5,
-                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)'
+                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)'
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                       style={{ backgroundColor: 'rgba(var(--theme-primary-rgb), 0.2)' }}>
-                    <SafeIcon icon={FiShield} className="text-sm" style={{ color: 'var(--theme-primary)' }} />
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
+                  >
+                    <SafeIcon
+                      icon={FiShield}
+                      className="text-sm"
+                      style={{ color: 'var(--theme-primary)' }}
+                    />
                   </div>
                   <span className="text-base font-medium">{t('adminAccess')}</span>
                 </motion.button>

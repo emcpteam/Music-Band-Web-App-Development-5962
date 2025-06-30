@@ -53,10 +53,17 @@ const MainApp = () => {
     >
       {/* Analytics & Tracking Codes */}
       <TrackingCodes />
-      
-      <Navigation 
-        onNavigate={scrollToSection} 
-        refs={{ heroRef, musicRef, bookletRef, podcastRef, fanWallRef, merchRef }} 
+
+      <Navigation
+        onNavigate={scrollToSection}
+        refs={{
+          heroRef,
+          musicRef,
+          bookletRef,
+          podcastRef,
+          fanWallRef,
+          merchRef
+        }}
       />
 
       <motion.div
@@ -69,7 +76,7 @@ const MainApp = () => {
         </section>
 
         <section ref={musicRef}>
-          <MusicPlayer 
+          <MusicPlayer
             currentTrack={currentTrack}
             setCurrentTrack={setCurrentTrack}
             isPlaying={isPlaying}

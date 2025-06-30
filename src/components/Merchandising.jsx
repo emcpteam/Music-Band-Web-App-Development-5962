@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import { useBandData } from '../contexts/AdminContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCart } from '../contexts/CartContext';
 
-const { FiShoppingBag, FiStar, FiShoppingCart, FiTruck, FiHeart, FiZap } = FiIcons;
+const { FiShoppingBag, FiStar, FiShoppingCart, FiTruck, FiHeart, FiZap, FiPlus } = FiIcons;
 
 const categories = [
   { id: 'all', label: 'allItems', icon: FiShoppingBag },
@@ -17,20 +19,35 @@ const categories = [
 
 const Merchandising = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
-
+  const [addingToCart, setAddingToCart] = useState({});
   const bandData = useBandData();
   const { t } = useLanguage();
-  const products = bandData.products.filter(product => product.isActive);
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
 
+  const products = bandData.products.filter(product => product.isActive);
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(product => product.category === selectedCategory);
 
-  const addToCart = (product) => {
-    setCart([...cart, product]);
-    // In a real app, you'd show a toast notification here
+  const handleAddToCart = async (product) => {
+    setAddingToCart({ ...addingToCart, [product.id]: true });
+    
+    // Simulate loading
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    addToCart(product);
+    setAddingToCart({ ...addingToCart, [product.id]: false });
+    
+    // Show success feedback
+    const button = document.getElementById(`add-to-cart-${product.id}`);
+    if (button) {
+      button.textContent = 'Added!';
+      setTimeout(() => {
+        button.textContent = t('addToCart');
+      }, 1500);
+    }
   };
 
   const toggleFavorite = (productId) => {
@@ -42,8 +59,26 @@ const Merchandising = () => {
   };
 
   const handleBuyNow = (product) => {
-    // In a real app, this would redirect to Stripe/payment processor
-    alert(`Redirecting to checkout for ${product.name}...`);
+    console.log('Buy Now clicked for:', product.name); // Debug log
+    
+    // Add to cart
+    addToCart(product);
+    
+    // Navigate to checkout with multiple fallbacks
+    try {
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Navigate failed:', error);
+      // Fallback: Direct hash change
+      window.location.hash = '#/checkout';
+    }
+    
+    // Additional fallback with delay
+    setTimeout(() => {
+      if (!window.location.hash.includes('checkout')) {
+        window.location.hash = '#/checkout';
+      }
+    }, 100);
   };
 
   return (
@@ -67,21 +102,6 @@ const Merchandising = () => {
             {t('showSupport')} {bandData.band.name} {t('gear')}
           </p>
         </motion.div>
-
-        {/* Cart Indicator */}
-        {cart.length > 0 && (
-          <motion.div
-            className="fixed top-20 right-4 z-40 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-full p-3 shadow-lg"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          >
-            <div className="flex items-center space-x-2">
-              <SafeIcon icon={FiShoppingCart} className="text-lg" />
-              <span className="font-semibold">{cart.length}</span>
-            </div>
-          </motion.div>
-        )}
 
         {/* Category Filter */}
         <motion.div
@@ -146,16 +166,20 @@ const Merchandising = () => {
                     <SafeIcon
                       icon={FiHeart}
                       className={`text-lg ${
-                        favorites.includes(product.id) ? 'text-red-500 fill-current' : 'text-gray-600'
+                        favorites.includes(product.id)
+                          ? 'text-red-500 fill-current'
+                          : 'text-gray-600'
                       }`}
                     />
                   </button>
                 </div>
+
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
                     <span className="text-xl font-bold text-orange-600">${product.price}</span>
                   </div>
+
                   <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                     <div className="flex items-center space-x-1">
                       <SafeIcon icon={FiShoppingBag} className="text-xs" />
@@ -166,24 +190,37 @@ const Merchandising = () => {
                       <span>{product.stock} {t('inStock')}</span>
                     </div>
                   </div>
+
                   <p className="text-gray-600 text-sm leading-relaxed mb-4">
                     {product.description}
                   </p>
+
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm text-gray-600 flex items-center space-x-1">
                       <SafeIcon icon={FiTruck} className="text-xs" />
                       <span>{t('freeShipping')}</span>
                     </span>
                   </div>
+
                   <div className="flex space-x-3">
                     <motion.button
-                      onClick={() => addToCart(product)}
-                      className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                      id={`add-to-cart-${product.id}`}
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addingToCart[product.id]}
+                      className="flex-1 flex items-center justify-center space-x-2 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      {t('addToCart')}
+                      {addingToCart[product.id] ? (
+                        <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <SafeIcon icon={FiPlus} className="text-sm" />
+                          <span>{t('addToCart')}</span>
+                        </>
+                      )}
                     </motion.button>
+
                     <motion.button
                       onClick={() => handleBuyNow(product)}
                       className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
@@ -203,7 +240,9 @@ const Merchandising = () => {
               <SafeIcon icon={FiShoppingBag} className="text-4xl text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {selectedCategory === 'all' ? t('noProductsAvailable') : `No ${t(categories.find(c => c.id === selectedCategory)?.label || 'products')} Products`}
+              {selectedCategory === 'all' 
+                ? t('noProductsAvailable') 
+                : `No ${t(categories.find(c => c.id === selectedCategory)?.label || 'products')} Products`}
             </h3>
             <p className="text-gray-600">{t('productsWillAppear')}</p>
           </div>
@@ -239,7 +278,7 @@ const Merchandising = () => {
               <p className="text-sm text-gray-600">{t('lovedByFans')}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -44,6 +44,72 @@ const initialData = {
     heroBackgroundImage: "",
     heroOverlayOpacity: 0.3
   },
+  systemConfig: {
+    shipping: {
+      freeShippingThreshold: 50,
+      rates: {
+        domestic: 8.99,
+        canada: 12.99,
+        europe: 15.99,
+        uk: 12.99,
+        australia: 18.99,
+        asia: 22.99,
+        worldwide: 25.99
+      },
+      processing: {
+        standardDays: 3,
+        expressDays: 1,
+        internationalDays: 7
+      }
+    },
+    stripe: {
+      publishableKey: "",
+      secretKey: "",
+      webhookSecret: "",
+      currency: "USD",
+      testMode: true
+    },
+    taxes: {
+      enabled: true,
+      rates: {
+        US: 8.5,
+        CA: 13.0,
+        EU: 20.0,
+        UK: 20.0,
+        AU: 10.0,
+        JP: 10.0
+      },
+      inclusive: false
+    },
+    email: {
+      provider: "smtp",
+      smtp: {
+        host: "",
+        port: 587,
+        username: "",
+        password: "",
+        secure: true
+      },
+      templates: {
+        orderConfirmation: true,
+        shipmentTracking: true,
+        promotionalEmails: false
+      }
+    },
+    security: {
+      enableRateLimiting: true,
+      maxLoginAttempts: 5,
+      sessionTimeout: 30,
+      requireHttps: true,
+      enableCORS: true
+    },
+    inventory: {
+      trackInventory: true,
+      lowStockThreshold: 10,
+      outOfStockBehavior: "hide",
+      allowBackorders: false
+    }
+  },
   translations: {
     en: {
       home: 'Home',
@@ -242,14 +308,12 @@ export const AdminProvider = ({ children }) => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        // Ensure new theme properties exist
+        // Ensure new systemConfig properties exist
         const mergedData = {
           ...initialData,
           ...parsedData,
-          theme: {
-            ...initialData.theme,
-            ...parsedData.theme
-          }
+          theme: { ...initialData.theme, ...parsedData.theme },
+          systemConfig: { ...initialData.systemConfig, ...parsedData.systemConfig }
         };
         return mergedData;
       } catch (error) {
@@ -282,7 +346,7 @@ export const AdminProvider = ({ children }) => {
       root.style.setProperty('--theme-background', data.theme.backgroundColor);
       root.style.setProperty('--theme-text', data.theme.textColor);
       root.style.setProperty('--theme-font-family', data.theme.fontFamily);
-      
+
       // Hero background settings
       root.style.setProperty('--theme-hero-bg-image', data.theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', data.theme.heroBackgroundType || 'gradient');
@@ -312,8 +376,8 @@ export const AdminProvider = ({ children }) => {
       }
 
       // Trigger a custom event to notify components of theme change
-      window.dispatchEvent(new CustomEvent('themeUpdated', {
-        detail: { theme: data.theme, trigger: themeUpdateTrigger }
+      window.dispatchEvent(new CustomEvent('themeUpdated', { 
+        detail: { theme: data.theme, trigger: themeUpdateTrigger } 
       }));
     }
   }, [data.theme, themeUpdateTrigger]);
@@ -347,6 +411,13 @@ export const AdminProvider = ({ children }) => {
     }));
     // Force theme update trigger
     setThemeUpdateTrigger(prev => prev + 1);
+  };
+
+  const updateSystemConfiguration = (configUpdates) => {
+    setData(prev => ({
+      ...prev,
+      systemConfig: { ...prev.systemConfig, ...configUpdates }
+    }));
   };
 
   const updateTranslations = (newTranslations) => {
@@ -625,11 +696,11 @@ export const AdminProvider = ({ children }) => {
       if (currentPassword !== data.adminCredentials.password) {
         return { success: false, error: 'Current password is incorrect' };
       }
-      
+
       if (newPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
-      
+
       setData(prev => ({
         ...prev,
         adminCredentials: {
@@ -637,7 +708,7 @@ export const AdminProvider = ({ children }) => {
           password: newPassword
         }
       }));
-      
+
       return { success: true };
     } catch (error) {
       console.error('Error changing password:', error);
@@ -667,7 +738,7 @@ export const AdminProvider = ({ children }) => {
       if (username !== data.adminCredentials.username) {
         return { success: false, error: 'Username not found' };
       }
-      
+
       const tempPassword = Math.random().toString(36).substring(2, 10);
       setData(prev => ({
         ...prev,
@@ -676,7 +747,7 @@ export const AdminProvider = ({ children }) => {
           password: tempPassword
         }
       }));
-      
+
       return {
         success: true,
         tempPassword,
@@ -695,6 +766,7 @@ export const AdminProvider = ({ children }) => {
     logout,
     updateBandInfo,
     updateTheme,
+    updateSystemConfiguration,
     updateTranslations,
     addUploadedFile,
     removeUploadedFile,
