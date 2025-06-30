@@ -27,6 +27,7 @@ const Merchandising = () => {
   const navigate = useNavigate();
 
   const products = bandData.products.filter(product => product.isActive);
+
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(product => product.category === selectedCategory);
@@ -51,8 +52,8 @@ const Merchandising = () => {
   };
 
   const toggleFavorite = (productId) => {
-    setFavorites(prev =>
-      prev.includes(productId)
+    setFavorites(prev => 
+      prev.includes(productId) 
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
@@ -84,7 +85,7 @@ const Merchandising = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50 py-20 px-4">
       <div className="max-w-7xl mx-auto">
-        <motion.div
+        <motion.div 
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -104,7 +105,7 @@ const Merchandising = () => {
         </motion.div>
 
         {/* Category Filter */}
-        <motion.div
+        <motion.div 
           className="flex flex-wrap justify-center gap-4 mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -142,8 +143,8 @@ const Merchandising = () => {
                 layout
               >
                 <div className="relative overflow-hidden">
-                  <img
-                    src={product.image}
+                  <img 
+                    src={product.image} 
                     alt={product.name}
                     className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
                   />
@@ -163,13 +164,13 @@ const Merchandising = () => {
                     onClick={() => toggleFavorite(product.id)}
                     className="absolute top-4 right-4 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
                   >
-                    <SafeIcon
-                      icon={FiHeart}
+                    <SafeIcon 
+                      icon={FiHeart} 
                       className={`text-lg ${
-                        favorites.includes(product.id)
-                          ? 'text-red-500 fill-current'
+                        favorites.includes(product.id) 
+                          ? 'text-red-500 fill-current' 
                           : 'text-gray-600'
-                      }`}
+                      }`} 
                     />
                   </button>
                 </div>
@@ -179,7 +180,7 @@ const Merchandising = () => {
                     <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
                     <span className="text-xl font-bold text-orange-600">${product.price}</span>
                   </div>
-
+                  
                   <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                     <div className="flex items-center space-x-1">
                       <SafeIcon icon={FiShoppingBag} className="text-xs" />
@@ -190,18 +191,18 @@ const Merchandising = () => {
                       <span>{product.stock} {t('inStock')}</span>
                     </div>
                   </div>
-
+                  
                   <p className="text-gray-600 text-sm leading-relaxed mb-4">
                     {product.description}
                   </p>
-
+                  
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm text-gray-600 flex items-center space-x-1">
                       <SafeIcon icon={FiTruck} className="text-xs" />
                       <span>{t('freeShipping')}</span>
                     </span>
                   </div>
-
+                  
                   <div className="flex space-x-3">
                     <motion.button
                       id={`add-to-cart-${product.id}`}
@@ -220,7 +221,7 @@ const Merchandising = () => {
                         </>
                       )}
                     </motion.button>
-
+                    
                     <motion.button
                       onClick={() => handleBuyNow(product)}
                       className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
@@ -242,14 +243,15 @@ const Merchandising = () => {
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               {selectedCategory === 'all' 
                 ? t('noProductsAvailable') 
-                : `No ${t(categories.find(c => c.id === selectedCategory)?.label || 'products')} Products`}
+                : `No ${t(categories.find(c => c.id === selectedCategory)?.label || 'products')} Products`
+              }
             </h3>
             <p className="text-gray-600">{t('productsWillAppear')}</p>
           </div>
         )}
 
         {/* Shipping Info */}
-        <motion.div
+        <motion.div 
           className="mt-16 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-2xl p-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -263,6 +265,7 @@ const Merchandising = () => {
               <h3 className="font-semibold text-gray-800 mb-2">Free Shipping</h3>
               <p className="text-sm text-gray-600">{t('freeShippingOver')}</p>
             </div>
+            
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex items-center justify-center mb-3">
                 <SafeIcon icon={FiStar} className="text-white text-xl" />
@@ -270,6 +273,7 @@ const Merchandising = () => {
               <h3 className="font-semibold text-gray-800 mb-2">{t('premiumQuality')}</h3>
               <p className="text-sm text-gray-600">{t('highQualityMaterials')}</p>
             </div>
+            
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex items-center justify-center mb-3">
                 <SafeIcon icon={FiHeart} className="text-white text-xl" />
@@ -278,7 +282,7 @@ const Merchandising = () => {
               <p className="text-sm text-gray-600">{t('lovedByFans')}</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
