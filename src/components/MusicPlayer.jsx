@@ -12,9 +12,9 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [showLyrics, setShowLyrics] = useState(true);
-
   const bandData = useBandData();
   const { t } = useLanguage();
+
   const tracks = bandData.songs.filter(song => song.isActive);
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
 
@@ -61,11 +61,11 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
 
   if (tracks.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-20 px-4">
+      <div className="min-h-screen theme-gradient-bg py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">{t('musicPlayer')}</h2>
+          <h2 className="text-4xl md:text-5xl font-bold theme-text mb-4">{t('musicPlayer')}</h2>
           <p className="text-xl text-gray-600 font-light mb-8">{t('noSongsYet')}</p>
-          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-xl">
+          <div className="theme-card p-8 shadow-xl">
             <p className="text-gray-600">{t('songsWillAppear')}</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-20 px-4">
+    <div className="min-h-screen theme-gradient-bg py-20 px-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="text-center mb-12"
@@ -82,7 +82,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold theme-text mb-4">
             {t('musicPlayer')}
           </h2>
           <p className="text-xl text-gray-600 font-light">
@@ -93,7 +93,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Player Section */}
           <motion.div
-            className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-xl"
+            className="theme-card p-8 shadow-xl"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -108,7 +108,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+              <h3 className="text-2xl font-semibold theme-text mb-2">
                 {tracks[currentTrack]?.title}
               </h3>
               <p className="text-gray-600">{bandData.band.name}</p>
@@ -127,7 +127,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
 
               <motion.button
                 onClick={handlePlayPause}
-                className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-white shadow-lg hover:shadow-xl transition-all"
+                className="p-4 rounded-full text-white shadow-lg hover:shadow-xl transition-all btn-primary"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -150,11 +150,11 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 <span>{formatTime(currentTime)}</span>
                 <span>{tracks[currentTrack]?.duration}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+              <div className="theme-progress-bg">
+                <div 
+                  className="theme-progress"
                   style={{ width: '35%' }}
-                ></div>
+                />
               </div>
             </div>
 
@@ -182,6 +182,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 <SafeIcon icon={FiHeart} className="text-sm" />
                 <span className="text-sm">{t('like')}</span>
               </motion.button>
+
               <motion.button
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
                 whileHover={{ scale: 1.05 }}
@@ -204,12 +205,12 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
             transition={{ duration: 0.8 }}
           >
             {/* Toggle Buttons */}
-            <div className="flex bg-white/70 backdrop-blur-md rounded-2xl p-2">
+            <div className="flex theme-card p-2">
               <button
                 onClick={() => setShowLyrics(true)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  showLyrics
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                  showLyrics 
+                    ? 'text-white shadow-lg btn-primary' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -218,8 +219,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(false)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  !showLyrics
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                  !showLyrics 
+                    ? 'text-white shadow-lg btn-primary' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -231,21 +232,21 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               {showLyrics ? (
                 <motion.div
                   key="lyrics"
-                  className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg"
+                  className="theme-card p-6 shadow-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <h4 className="text-xl font-semibold text-gray-800 mb-4">
+                  <h4 className="text-xl font-semibold theme-text mb-4">
                     {tracks[currentTrack]?.title} - Lyrics
                   </h4>
-                  <div className="text-gray-700 whitespace-pre-line mb-6 leading-relaxed">
+                  <div className="theme-text whitespace-pre-line mb-6 leading-relaxed">
                     {tracks[currentTrack]?.lyrics || t('noLyricsAvailable')}
                   </div>
                   {tracks[currentTrack]?.notes && (
                     <div className="border-t pt-4">
-                      <h5 className="font-medium text-gray-800 mb-2">{t('artistNotes')}</h5>
+                      <h5 className="font-medium theme-text mb-2">{t('artistNotes')}</h5>
                       <p className="text-gray-600 text-sm leading-relaxed">
                         {tracks[currentTrack].notes}
                       </p>
@@ -255,13 +256,13 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               ) : (
                 <motion.div
                   key="tracklist"
-                  className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg"
+                  className="theme-card p-6 shadow-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <h4 className="text-xl font-semibold text-gray-800 mb-4">{t('trackList')}</h4>
+                  <h4 className="text-xl font-semibold theme-text mb-4">{t('trackList')}</h4>
                   <div className="space-y-2">
                     {tracks.map((track, index) => (
                       <motion.button
@@ -269,17 +270,25 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                         onClick={() => handleTrackSelect(index)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${
                           currentTrack === index
-                            ? 'bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200'
+                            ? 'bg-gradient-to-r theme-gradient text-white border-2'
                             : 'hover:bg-gray-50'
                         }`}
+                        style={{
+                          background: currentTrack === index 
+                            ? `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))` 
+                            : undefined,
+                          borderColor: currentTrack === index 
+                            ? 'var(--theme-primary)' 
+                            : 'transparent'
+                        }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center space-x-4">
-                          <div
+                          <div 
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              currentTrack === index
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                              currentTrack === index 
+                                ? 'bg-white/20 text-white' 
                                 : 'bg-gray-200 text-gray-600'
                             }`}
                           >
@@ -290,11 +299,29 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                             )}
                           </div>
                           <div className="text-left">
-                            <p className="font-medium text-gray-800">{track.title}</p>
-                            <p className="text-sm text-gray-600">{getAlbumTitle(track.albumId)}</p>
+                            <p 
+                              className={`font-medium ${
+                                currentTrack === index ? 'text-white' : 'theme-text'
+                              }`}
+                            >
+                              {track.title}
+                            </p>
+                            <p 
+                              className={`text-sm ${
+                                currentTrack === index ? 'text-white/80' : 'text-gray-600'
+                              }`}
+                            >
+                              {getAlbumTitle(track.albumId)}
+                            </p>
                           </div>
                         </div>
-                        <span className="text-sm text-gray-600">{track.duration}</span>
+                        <span 
+                          className={`text-sm ${
+                            currentTrack === index ? 'text-white/80' : 'text-gray-600'
+                          }`}
+                        >
+                          {track.duration}
+                        </span>
                       </motion.button>
                     ))}
                   </div>

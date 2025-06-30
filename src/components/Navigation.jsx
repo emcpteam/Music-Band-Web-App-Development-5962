@@ -32,18 +32,21 @@ const Navigation = ({ onNavigate, refs }) => {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-white/20"
+        className="fixed top-0 left-0 right-0 z-50 theme-nav border-b"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <motion.div className="flex items-center space-x-2" whileHover={{ scale: 1.05 }}>
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+            <motion.div 
+              className="flex items-center space-x-2" 
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center theme-gradient">
                 <SafeIcon icon={FiMusic} className="text-white text-sm" />
               </div>
-              <span className="font-semibold text-gray-800">{bandData.band.name}</span>
+              <span className="font-semibold theme-text">{bandData.band.name}</span>
             </motion.div>
 
             {/* Desktop Navigation */}
@@ -52,22 +55,23 @@ const Navigation = ({ onNavigate, refs }) => {
                 <motion.button
                   key={item.label}
                   onClick={() => onNavigate(item.ref)}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
-                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-current"
+                  style={{ '--hover-color': 'var(--theme-primary)' }}
+                  whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <SafeIcon icon={item.icon} className="text-sm" />
                   <span className="text-sm font-medium">{item.label}</span>
                 </motion.button>
               ))}
-              
+
               {/* Language Selector - Desktop */}
               <LanguageSelector />
-              
+
               {/* Admin Access - Desktop */}
               <motion.button
                 onClick={handleAdminAccess}
-                className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors"
+                className="flex items-center space-x-2 theme-primary transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 title={t('adminAccess')}
@@ -91,7 +95,7 @@ const Navigation = ({ onNavigate, refs }) => {
         {/* Mobile Menu */}
         {isOpen && (
           <motion.div
-            className="md:hidden bg-white/90 backdrop-blur-md border-t border-white/20"
+            className="md:hidden theme-nav border-t backdrop-blur-md"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -104,23 +108,32 @@ const Navigation = ({ onNavigate, refs }) => {
                     onNavigate(item.ref);
                     setIsOpen(false);
                   }}
-                  className="flex items-center space-x-3 w-full px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                  className="flex items-center space-x-3 w-full px-3 py-2 text-gray-600 rounded-lg transition-colors"
+                  style={{
+                    '--hover-bg': 'rgba(var(--theme-primary-rgb), 0.1)',
+                    '--hover-color': 'var(--theme-primary)'
+                  }}
                   whileHover={{ x: 5 }}
                 >
                   <SafeIcon icon={item.icon} className="text-sm" />
                   <span className="text-sm font-medium">{item.label}</span>
                 </motion.button>
               ))}
-              
+
               {/* Language Selector - Mobile */}
               <div className="px-3 py-2">
                 <LanguageSelector />
               </div>
-              
+
               {/* Admin Access - Mobile */}
               <motion.button
                 onClick={handleAdminAccess}
-                className="flex items-center space-x-3 w-full px-3 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors border-t border-purple-100 mt-2 pt-3"
+                className="flex items-center space-x-3 w-full px-3 py-2 rounded-lg transition-colors border-t mt-2 pt-3"
+                style={{
+                  color: 'var(--theme-primary)',
+                  borderColor: 'rgba(var(--theme-primary-rgb), 0.1)',
+                  backgroundColor: 'rgba(var(--theme-primary-rgb), 0.05)'
+                }}
                 whileHover={{ x: 5 }}
               >
                 <SafeIcon icon={FiShield} className="text-sm" />

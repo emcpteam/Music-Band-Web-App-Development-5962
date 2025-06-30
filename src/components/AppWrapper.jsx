@@ -5,6 +5,7 @@ import '@questlabs/react-sdk/dist/style.css'
 import { AuthProvider } from '../contexts/AuthContext'
 import { AdminProvider } from '../contexts/AdminContext'
 import { LanguageProvider } from '../contexts/LanguageContext'
+import { ThemeProvider } from '../contexts/ThemeContext'
 import questConfig from '../config/questConfig'
 import LoginPage from './auth/LoginPage'
 import OnboardingPage from './auth/OnboardingPage'
@@ -17,37 +18,39 @@ import ErrorBoundary from './ErrorBoundary'
 const AppWrapper = () => {
   return (
     <ErrorBoundary>
-      <QuestProvider
-        apiKey={questConfig.APIKEY}
-        entityId={questConfig.ENTITYID}
+      <QuestProvider 
+        apiKey={questConfig.APIKEY} 
+        entityId={questConfig.ENTITYID} 
         apiType="PRODUCTION"
       >
         <LanguageProvider>
           <AuthProvider>
             <AdminProvider>
-              <Router>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/admin" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route 
-                    path="/onboarding" 
-                    element={
-                      <ProtectedRoute>
-                        <OnboardingPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/*" 
-                    element={
-                      <ProtectedRoute requireOnboarding={true}>
-                        <MainApp />
-                      </ProtectedRoute>
-                    } 
-                  />
-                </Routes>
-              </Router>
+              <ThemeProvider>
+                <Router>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/admin" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route 
+                      path="/onboarding" 
+                      element={
+                        <ProtectedRoute>
+                          <OnboardingPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/*" 
+                      element={
+                        <ProtectedRoute requireOnboarding={true}>
+                          <MainApp />
+                        </ProtectedRoute>
+                      } 
+                    />
+                  </Routes>
+                </Router>
+              </ThemeProvider>
             </AdminProvider>
           </AuthProvider>
         </LanguageProvider>

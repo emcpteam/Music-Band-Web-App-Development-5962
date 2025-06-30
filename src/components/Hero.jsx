@@ -14,11 +14,20 @@ const Hero = ({ onPlayClick }) => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Pattern */}
+      {/* Background Pattern with theme colors */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-300 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-pink-300 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-300 rounded-full blur-3xl"></div>
+        <div 
+          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl"
+          style={{ backgroundColor: 'var(--theme-primary)' }}
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
+          style={{ backgroundColor: 'var(--theme-secondary)' }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl"
+          style={{ backgroundColor: 'var(--theme-accent)' }}
+        />
       </div>
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
@@ -47,10 +56,17 @@ const Hero = ({ onPlayClick }) => {
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-4">
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center mr-4 theme-gradient"
+            >
               <SafeIcon icon={FiMusic} className="text-white text-xl" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h1 
+              className="text-4xl md:text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent theme-gradient"
+              style={{
+                backgroundImage: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`
+              }}
+            >
               {bandData.band.name}
             </h1>
           </div>
@@ -62,7 +78,7 @@ const Hero = ({ onPlayClick }) => {
         {/* Listen Now Button */}
         <motion.button
           onClick={onPlayClick}
-          className="group relative inline-flex items-center space-x-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+          className="group relative inline-flex items-center space-x-3 text-white px-8 py-4 rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 btn-primary"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
@@ -74,14 +90,16 @@ const Hero = ({ onPlayClick }) => {
           <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </motion.button>
 
-        {/* Floating Elements */}
-        <motion.div
-          className="absolute top-20 left-10 w-20 h-20 bg-purple-200 rounded-full opacity-60"
+        {/* Floating Elements with theme colors */}
+        <motion.div 
+          className="absolute top-20 left-10 w-20 h-20 rounded-full opacity-60"
+          style={{ backgroundColor: 'var(--theme-primary)' }}
           animate={{ y: [0, -20, 0], rotate: [0, 180, 360] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute bottom-20 right-10 w-16 h-16 bg-pink-200 rounded-full opacity-60"
+        <motion.div 
+          className="absolute bottom-20 right-10 w-16 h-16 rounded-full opacity-60"
+          style={{ backgroundColor: 'var(--theme-secondary)' }}
           animate={{ y: [0, 20, 0], rotate: [0, -180, -360] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />

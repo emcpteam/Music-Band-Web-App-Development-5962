@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Custom Properties for Theme */
+:root {
+  --theme-primary: #8B5CF6;
+  --theme-secondary: #EC4899;
+  --theme-accent: #06B6D4;
+  --theme-background: #FFFFFF;
+  --theme-text: #1F2937;
+  --theme-font-family: 'Poppins', sans-serif;
+  --theme-primary-rgb: 139, 92, 246;
+  --theme-secondary-rgb: 236, 72, 153;
+  --theme-accent-rgb: 6, 182, 212;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,14 +22,132 @@
 }
 
 body {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--theme-font-family), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--theme-text);
+  background-color: var(--theme-background);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Theme-aware utility classes */
+.theme-primary {
+  color: var(--theme-primary);
+}
+
+.theme-primary-bg {
+  background-color: var(--theme-primary);
+}
+
+.theme-secondary {
+  color: var(--theme-secondary);
+}
+
+.theme-secondary-bg {
+  background-color: var(--theme-secondary);
+}
+
+.theme-accent {
+  color: var(--theme-accent);
+}
+
+.theme-accent-bg {
+  background-color: var(--theme-accent);
+}
+
+.theme-gradient {
+  background: linear-gradient(45deg, var(--theme-primary), var(--theme-secondary));
+}
+
+.theme-gradient-bg {
+  background: linear-gradient(135deg, 
+    rgba(var(--theme-primary-rgb), 0.1) 0%, 
+    rgba(var(--theme-secondary-rgb), 0.1) 100%);
+}
+
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-bg {
+  background-color: var(--theme-background);
+}
+
+/* Button styles with theme support */
+.btn-primary {
+  background: linear-gradient(45deg, var(--theme-primary), var(--theme-secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(var(--theme-primary-rgb), 0.3);
+}
+
+.btn-accent {
+  background-color: var(--theme-accent);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+/* Card styles */
+.theme-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.1);
+  border-radius: 1rem;
+}
+
+/* Input styles */
+.theme-input {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.1);
+}
+
+/* Navigation styles */
+.theme-nav {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(var(--theme-primary-rgb), 0.1);
+}
+
+/* Progress bar styles */
+.theme-progress {
+  background: linear-gradient(45deg, var(--theme-primary), var(--theme-secondary));
+  border-radius: 9999px;
+  height: 0.5rem;
+  transition: width 0.3s ease;
+}
+
+.theme-progress-bg {
+  background: rgba(var(--theme-primary-rgb), 0.1);
+  border-radius: 9999px;
+  height: 0.5rem;
 }
