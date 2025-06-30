@@ -26,6 +26,28 @@ const initialData = {
     tracking: {
       metaPixelCode: "",
       googleTagManagerCode: ""
+    },
+    // New footer customization options
+    footer: {
+      copyrightText: "© 2024 Stellar Waves. All rights reserved.",
+      customText: "",
+      showQuickLinks: true,
+      showSocialLinks: true,
+      embedCodes: {
+        gdprBanner: "",
+        cookieBanner: "",
+        customScript: "",
+        customHtml: ""
+      },
+      legalLinks: {
+        privacyPolicy: "#privacy",
+        termsOfService: "#terms",
+        cookiePolicy: "#cookies",
+        showLegalLinks: true
+      },
+      customLinks: [
+        // Example: { label: "Contact", url: "mailto:contact@band.com", newTab: false }
+      ]
     }
   },
   adminCredentials: {
@@ -40,7 +62,7 @@ const initialData = {
     backgroundColor: "#FFFFFF",
     textColor: "#1F2937",
     fontFamily: "Poppins",
-    heroBackgroundType: "gradient", // 'gradient', 'image', 'overlay'
+    heroBackgroundType: "gradient",
     heroBackgroundImage: "",
     heroOverlayOpacity: 0.3
   },
@@ -308,12 +330,26 @@ export const AdminProvider = ({ children }) => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        // Ensure new systemConfig properties exist
+        // Ensure new footer properties exist
         const mergedData = {
           ...initialData,
           ...parsedData,
-          theme: { ...initialData.theme, ...parsedData.theme },
-          systemConfig: { ...initialData.systemConfig, ...parsedData.systemConfig }
+          band: {
+            ...initialData.band,
+            ...parsedData.band,
+            footer: {
+              ...initialData.band.footer,
+              ...parsedData.band?.footer
+            }
+          },
+          theme: {
+            ...initialData.theme,
+            ...parsedData.theme
+          },
+          systemConfig: {
+            ...initialData.systemConfig,
+            ...parsedData.systemConfig
+          }
         };
         return mergedData;
       } catch (error) {
@@ -376,8 +412,8 @@ export const AdminProvider = ({ children }) => {
       }
 
       // Trigger a custom event to notify components of theme change
-      window.dispatchEvent(new CustomEvent('themeUpdated', { 
-        detail: { theme: data.theme, trigger: themeUpdateTrigger } 
+      window.dispatchEvent(new CustomEvent('themeUpdated', {
+        detail: { theme: data.theme, trigger: themeUpdateTrigger }
       }));
     }
   }, [data.theme, themeUpdateTrigger]);
@@ -401,6 +437,17 @@ export const AdminProvider = ({ children }) => {
     setData(prev => ({
       ...prev,
       band: { ...prev.band, ...updates }
+    }));
+  };
+
+  // New function to update footer settings
+  const updateFooterSettings = (footerUpdates) => {
+    setData(prev => ({
+      ...prev,
+      band: {
+        ...prev.band,
+        footer: { ...prev.band.footer, ...footerUpdates }
+      }
     }));
   };
 
@@ -765,6 +812,7 @@ export const AdminProvider = ({ children }) => {
     login,
     logout,
     updateBandInfo,
+    updateFooterSettings, // New function for footer management
     updateTheme,
     updateSystemConfiguration,
     updateTranslations,

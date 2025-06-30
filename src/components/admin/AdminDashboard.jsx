@@ -17,27 +17,10 @@ import CommentModeration from './sections/CommentModeration';
 import AccountSettings from './sections/AccountSettings';
 import TranslationManager from './sections/TranslationManager';
 import SystemConfiguration from './sections/SystemConfiguration';
+import FooterSettings from './sections/FooterSettings';
 import LanguageSelector from '../common/LanguageSelector';
 
-const {
-  FiHome,
-  FiSettings,
-  FiPalette,
-  FiMusic,
-  FiMic,
-  FiImage,
-  FiShoppingBag,
-  FiLogOut,
-  FiMenu,
-  FiX,
-  FiDisc,
-  FiHeadphones,
-  FiUpload,
-  FiMessageCircle,
-  FiUser,
-  FiGlobe,
-  FiTool
-} = FiIcons;
+const { FiHome, FiSettings, FiPalette, FiMusic, FiMic, FiImage, FiShoppingBag, FiLogOut, FiMenu, FiX, FiDisc, FiHeadphones, FiUpload, FiMessageCircle, FiUser, FiGlobe, FiTool, FiLayers } = FiIcons;
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -69,6 +52,7 @@ const AdminDashboard = () => {
     { id: 'products', label: ta('merchandise'), icon: FiShoppingBag },
     { id: 'uploads', label: ta('fileManager'), icon: FiUpload },
     { id: 'comments', label: ta('comments'), icon: FiMessageCircle },
+    { id: 'footer', label: 'Footer Settings', icon: FiLayers },
     { id: 'translations', label: ta('translationManager'), icon: FiGlobe },
     { id: 'config', label: 'System Config', icon: FiTool },
     { id: 'account', label: ta('accountSettings'), icon: FiUser }
@@ -101,6 +85,8 @@ const AdminDashboard = () => {
         return <FileUploadManager />;
       case 'comments':
         return <CommentModeration />;
+      case 'footer':
+        return <FooterSettings />;
       case 'translations':
         return <TranslationManager />;
       case 'config':
@@ -255,6 +241,13 @@ const AdminDashboard = () => {
               <span className="text-gray-700">{ta('moderateComments')}</span>
             </button>
             <button
+              onClick={() => setActiveSection('footer')}
+              className="w-full flex items-center space-x-3 p-3 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
+            >
+              <SafeIcon icon={FiLayers} className="text-green-600" />
+              <span className="text-gray-700">Footer Settings</span>
+            </button>
+            <button
               onClick={() => setActiveSection('config')}
               className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
             >
@@ -263,16 +256,16 @@ const AdminDashboard = () => {
             </button>
             <button
               onClick={() => setActiveSection('translations')}
-              className="w-full flex items-center space-x-3 p-3 bg-green-50 hover:bg-green-100 rounded-xl transition-colors"
+              className="w-full flex items-center space-x-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
             >
-              <SafeIcon icon={FiGlobe} className="text-green-600" />
+              <SafeIcon icon={FiGlobe} className="text-blue-600" />
               <span className="text-gray-700">{ta('translationManager')}</span>
             </button>
             <button
               onClick={() => setActiveSection('songs')}
-              className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+              className="w-full flex items-center space-x-3 p-3 bg-pink-50 hover:bg-pink-100 rounded-xl transition-colors"
             >
-              <SafeIcon icon={FiMusic} className="text-purple-600" />
+              <SafeIcon icon={FiMusic} className="text-pink-600" />
               <span className="text-gray-700">{ta('addNewSong')}</span>
             </button>
           </div>
@@ -345,9 +338,16 @@ const AdminDashboard = () => {
                   </span>
                 )}
                 
-                {/* Highlight new system config */}
-                {item.id === 'config' && (
+                {/* Highlight new footer settings */}
+                {item.id === 'footer' && (
                   <span className="ml-auto bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    NEW
+                  </span>
+                )}
+
+                {/* Highlight system config */}
+                {item.id === 'config' && (
+                  <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                     NEW
                   </span>
                 )}
