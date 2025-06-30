@@ -44,11 +44,11 @@ const AppWrapper = () => {
                           </ProtectedRoute>
                         } 
                       />
-                      
+
                       {/* Admin Routes */}
                       <Route path="/admin" element={<AdminLogin />} />
                       <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                      
+
                       {/* E-commerce Routes */}
                       <Route 
                         path="/checkout" 
@@ -66,7 +66,7 @@ const AppWrapper = () => {
                           </ProtectedRoute>
                         } 
                       />
-                      
+
                       {/* Main App - Default Route */}
                       <Route 
                         path="/" 
@@ -76,7 +76,7 @@ const AppWrapper = () => {
                           </ProtectedRoute>
                         } 
                       />
-                      
+
                       {/* Catch-all route for any other paths */}
                       <Route 
                         path="*" 

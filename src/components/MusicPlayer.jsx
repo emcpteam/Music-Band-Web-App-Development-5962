@@ -12,11 +12,33 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [showLyrics, setShowLyrics] = useState(true);
+  const [likedSongs, setLikedSongs] = useState(() => {
+    // Load liked songs from localStorage
+    try {
+      const saved = localStorage.getItem('likedSongs');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      return [];
+    }
+  });
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
+  
   const bandData = useBandData();
   const { t } = useLanguage();
-
+  
   const tracks = bandData.songs.filter(song => song.isActive);
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
+  const currentSong = tracks[currentTrack];
+
+  // Save liked songs to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+    } catch (error) {
+      console.error('Error saving liked songs:', error);
+    }
+  }, [likedSongs]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -59,6 +81,98 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
     return album ? album.title : bandData.band.name;
   };
 
+  // Handle Like Button
+  const handleLike = () => {
+    if (!currentSong) return;
+
+    const songId = currentSong.id;
+    const isCurrentlyLiked = likedSongs.includes(songId);
+
+    if (isCurrentlyLiked) {
+      // Remove from liked songs
+      setLikedSongs(prev => prev.filter(id => id !== songId));
+      
+      // Show feedback
+      setShareMessage(`Removed "${currentSong.title}" from your favorites`);
+    } else {
+      // Add to liked songs
+      setLikedSongs(prev => [...prev, songId]);
+      
+      // Show feedback
+      setShareMessage(`Added "${currentSong.title}" to your favorites! ❤️`);
+    }
+
+    // Clear message after 3 seconds
+    setTimeout(() => setShareMessage(''), 3000);
+  };
+
+  // Handle Share Button
+  const handleShare = async () => {
+    if (!currentSong) return;
+
+    const shareData = {
+      title: `${currentSong.title} - ${bandData.band.name}`,
+      text: `Check out this amazing song "${currentSong.title}" by ${bandData.band.name}!`,
+      url: window.location.href
+    };
+
+    // Try native Web Share API first (mobile devices)
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        setShareMessage('Thanks for sharing! 🎵');
+        setTimeout(() => setShareMessage(''), 3000);
+        return;
+      } catch (error) {
+        console.log('Native share failed, showing share menu');
+      }
+    }
+
+    // Fallback: Show custom share menu
+    setShowShareMenu(true);
+  };
+
+  // Share to specific platforms
+  const shareToTwitter = () => {
+    const text = `🎵 Currently listening to "${currentSong.title}" by ${bandData.band.name} 🎵`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setShowShareMenu(false);
+    setShareMessage('Shared to Twitter! 🐦');
+    setTimeout(() => setShareMessage(''), 3000);
+  };
+
+  const shareToFacebook = () => {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setShowShareMenu(false);
+    setShareMessage('Shared to Facebook! 📘');
+    setTimeout(() => setShareMessage(''), 3000);
+  };
+
+  const copyToClipboard = async () => {
+    const shareText = `🎵 Check out "${currentSong.title}" by ${bandData.band.name}! ${window.location.href}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setShareMessage('Link copied to clipboard! 📋');
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShareMessage('Link copied to clipboard! 📋');
+    }
+    
+    setShowShareMenu(false);
+    setTimeout(() => setShareMessage(''), 3000);
+  };
+
+  const isLiked = currentSong && likedSongs.includes(currentSong.id);
+
   if (tracks.length === 0) {
     return (
       <div className="min-h-screen theme-gradient-bg py-20 px-4">
@@ -93,11 +207,26 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Player Section */}
           <motion.div
-            className="theme-card p-8 shadow-xl"
+            className="theme-card p-8 shadow-xl relative"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
+            {/* Feedback Message */}
+            <AnimatePresence>
+              {shareMessage && (
+                <motion.div
+                  className="absolute top-4 left-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg text-center font-medium z-10"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {shareMessage}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Current Track Info */}
             <div className="text-center mb-8">
               <div className="w-48 h-48 mx-auto mb-6 relative">
@@ -170,17 +299,26 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center space-x-4 relative">
               <motion.button
-                className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors"
+                onClick={handleLike}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all ${
+                  isLiked 
+                    ? 'bg-red-100 text-red-600' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
+                }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <SafeIcon icon={FiHeart} className="text-sm" />
-                <span className="text-sm">{t('like')}</span>
+                <SafeIcon 
+                  icon={FiHeart} 
+                  className={`text-sm ${isLiked ? 'fill-current' : ''}`} 
+                />
+                <span className="text-sm">{isLiked ? 'Liked' : t('like')}</span>
               </motion.button>
 
               <motion.button
+                onClick={handleShare}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -188,6 +326,43 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 <SafeIcon icon={FiShare2} className="text-sm" />
                 <span className="text-sm">{t('share')}</span>
               </motion.button>
+
+              {/* Share Menu */}
+              <AnimatePresence>
+                {showShareMenu && (
+                  <motion.div
+                    className="absolute bottom-full mb-2 right-0 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-20"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="p-2 space-y-1">
+                      <button
+                        onClick={shareToTwitter}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-2"
+                      >
+                        <span>🐦</span>
+                        <span>Share on Twitter</span>
+                      </button>
+                      <button
+                        onClick={shareToFacebook}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-2"
+                      >
+                        <span>📘</span>
+                        <span>Share on Facebook</span>
+                      </button>
+                      <button
+                        onClick={copyToClipboard}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-2"
+                      >
+                        <span>📋</span>
+                        <span>Copy Link</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Hidden Audio Element */}
@@ -206,8 +381,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(true)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  showLyrics 
-                    ? 'text-white shadow-lg btn-primary' 
+                  showLyrics
+                    ? 'text-white shadow-lg btn-primary'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -216,8 +391,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(false)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  !showLyrics 
-                    ? 'text-white shadow-lg btn-primary' 
+                  !showLyrics
+                    ? 'text-white shadow-lg btn-primary'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -280,41 +455,43 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center space-x-4">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              currentTrack === index
-                                ? 'bg-white/20 text-white'
-                                : 'bg-gray-200 text-gray-600'
-                            }`}
-                          >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            currentTrack === index
+                              ? 'bg-white/20 text-white'
+                              : 'bg-gray-200 text-gray-600'
+                          }`}>
                             {currentTrack === index && isPlaying ? (
                               <SafeIcon icon={FiPause} className="text-sm" />
                             ) : (
                               <SafeIcon icon={FiPlay} className="text-sm" />
                             )}
                           </div>
-                          <div className="text-left">
-                            <p
-                              className={`font-medium ${
+                          <div className="text-left flex items-center space-x-2">
+                            <div>
+                              <p className={`font-medium ${
                                 currentTrack === index ? 'text-white' : 'theme-text'
-                              }`}
-                            >
-                              {track.title}
-                            </p>
-                            <p
-                              className={`text-sm ${
+                              }`}>
+                                {track.title}
+                              </p>
+                              <p className={`text-sm ${
                                 currentTrack === index ? 'text-white/80' : 'text-gray-600'
-                              }`}
-                            >
-                              {getAlbumTitle(track.albumId)}
-                            </p>
+                              }`}>
+                                {getAlbumTitle(track.albumId)}
+                              </p>
+                            </div>
+                            {likedSongs.includes(track.id) && (
+                              <SafeIcon 
+                                icon={FiHeart} 
+                                className={`text-sm fill-current ${
+                                  currentTrack === index ? 'text-white' : 'text-red-500'
+                                }`} 
+                              />
+                            )}
                           </div>
                         </div>
-                        <span
-                          className={`text-sm ${
-                            currentTrack === index ? 'text-white/80' : 'text-gray-600'
-                          }`}
-                        >
+                        <span className={`text-sm ${
+                          currentTrack === index ? 'text-white/80' : 'text-gray-600'
+                        }`}>
                           {track.duration}
                         </span>
                       </motion.button>
@@ -326,6 +503,14 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
           </motion.div>
         </div>
       </div>
+
+      {/* Backdrop for share menu */}
+      {showShareMenu && (
+        <div 
+          className="fixed inset-0 z-10" 
+          onClick={() => setShowShareMenu(false)}
+        />
+      )}
     </div>
   );
 };

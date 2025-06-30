@@ -20,24 +20,49 @@ export default defineConfig({
           motion: ['framer-motion'],
           quest: ['@questlabs/react-sdk']
         }
+      },
+      external: [],
+      onwarn: (warning, warn) => {
+        // Suppress specific warnings that don't affect functionality
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+        if (warning.code === 'SOURCEMAP_ERROR') return
+        warn(warning)
       }
     }
   },
   server: {
     port: 3000,
-    host: true
+    host: true,
+    hmr: {
+      port: 3001
+    }
   },
   preview: {
     port: 4173,
     host: true
   },
   esbuild: {
-    target: 'es2015'
+    target: 'es2015',
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
   },
   define: {
-    global: 'globalThis'
+    global: 'globalThis',
+    'process.env': {}
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
+    include: [
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      'react-icons/fi',
+      'framer-motion',
+      '@questlabs/react-sdk'
+    ],
+    exclude: ['@supabase/supabase-js']
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   }
 })
