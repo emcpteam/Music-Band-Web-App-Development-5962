@@ -1,0 +1,84 @@
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
+import Hero from './Hero';
+import MusicPlayer from './MusicPlayer';
+import MultimediaBooklet from './MultimediaBooklet';
+import PodcastDiary from './PodcastDiary';
+import FanWall from './FanWall';
+import Merchandising from './Merchandising';
+import Footer from './Footer';
+import Navigation from './Navigation';
+import UserProfile from './UserProfile';
+import TrackingCodes from './TrackingCodes';
+
+const MainApp = () => {
+  const [currentTrack, setCurrentTrack] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  // Refs for navigation
+  const heroRef = useRef(null);
+  const musicRef = useRef(null);
+  const bookletRef = useRef(null);
+  const podcastRef = useRef(null);
+  const fanWallRef = useRef(null);
+  const merchRef = useRef(null);
+
+  const scrollToSection = (sectionRef) => {
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-pastel font-poppins">
+      {/* Analytics & Tracking Codes */}
+      <TrackingCodes />
+      
+      <Navigation 
+        onNavigate={scrollToSection} 
+        refs={{ heroRef, musicRef, bookletRef, podcastRef, fanWallRef, merchRef }} 
+      />
+      <UserProfile />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <section ref={heroRef}>
+          <Hero onPlayClick={() => scrollToSection(musicRef)} />
+        </section>
+
+        <section ref={musicRef}>
+          <MusicPlayer 
+            currentTrack={currentTrack}
+            setCurrentTrack={setCurrentTrack}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            audioRef={audioRef}
+          />
+        </section>
+
+        <section ref={bookletRef}>
+          <MultimediaBooklet />
+        </section>
+
+        <section ref={podcastRef}>
+          <PodcastDiary />
+        </section>
+
+        <section ref={fanWallRef}>
+          <FanWall />
+        </section>
+
+        <section ref={merchRef}>
+          <Merchandising />
+        </section>
+
+        <Footer />
+      </motion.div>
+    </div>
+  );
+};
+
+export default MainApp;
