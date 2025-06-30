@@ -11,24 +11,91 @@ const Hero = ({ onPlayClick }) => {
   const bandData = useBandData();
   const { t } = useLanguage();
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
+  const theme = bandData.theme;
+
+  // Helper function to convert hex to RGB values
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 139, g: 92, b: 246 }; // Fallback to primary color
+  };
+
+  // Get background style based on theme settings
+  const getBackgroundStyle = () => {
+    const backgroundType = theme?.heroBackgroundType || 'gradient';
+    const backgroundImage = theme?.heroBackgroundImage;
+    const overlayOpacity = theme?.heroOverlayOpacity || 0.3;
+    const primaryRgb = hexToRgb(theme?.primaryColor || '#8B5CF6');
+    const secondaryRgb = hexToRgb(theme?.secondaryColor || '#EC4899');
+
+    switch (backgroundType) {
+      case 'image':
+        if (backgroundImage) {
+          return {
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed'
+          };
+        }
+        break;
+      
+      case 'overlay':
+        if (backgroundImage) {
+          return {
+            backgroundImage: `linear-gradient(rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${overlayOpacity}), rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${overlayOpacity})), url(${backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed'
+          };
+        }
+        break;
+      
+      case 'gradient':
+      default:
+        // Default gradient background
+        return {};
+    }
+
+    // Fallback to default gradient
+    return {};
+  };
+
+  const backgroundStyle = getBackgroundStyle();
+  const hasCustomBackground = theme?.heroBackgroundType === 'image' || theme?.heroBackgroundType === 'overlay';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Pattern with theme colors */}
-      <div className="absolute inset-0 opacity-10">
-        <div 
-          className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl" 
-          style={{ backgroundColor: 'var(--theme-primary)' }} 
-        />
-        <div 
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" 
-          style={{ backgroundColor: 'var(--theme-secondary)' }} 
-        />
-        <div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl" 
-          style={{ backgroundColor: 'var(--theme-accent)' }} 
-        />
-      </div>
+    <div 
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={backgroundStyle}
+    >
+      {/* Background Pattern with theme colors - only show if not using custom background */}
+      {!hasCustomBackground && (
+        <div className="absolute inset-0 opacity-10">
+          <div 
+            className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl" 
+            style={{ backgroundColor: 'var(--theme-primary)' }} 
+          />
+          <div 
+            className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" 
+            style={{ backgroundColor: 'var(--theme-secondary)' }} 
+          />
+          <div 
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl" 
+            style={{ backgroundColor: 'var(--theme-accent)' }} 
+          />
+        </div>
+      )}
+
+      {/* Content Overlay for better readability on custom backgrounds */}
+      {hasCustomBackground && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+      )}
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         {/* Album Cover */}
@@ -62,17 +129,25 @@ const Hero = ({ onPlayClick }) => {
               <SafeIcon icon={FiMusic} className="text-white text-xl" />
             </div>
             <h1 
-              className="text-4xl md:text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
-              style={{ 
-                backgroundImage: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+              className={`text-4xl md:text-6xl font-bold bg-gradient-to-r bg-clip-text text-transparent ${hasCustomBackground ? 'text-white' : ''}`}
+              style={{
+                ...(hasCustomBackground 
+                  ? { color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }
+                  : {
+                      backgroundImage: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent'
+                    }
+                )
               }}
             >
               {bandData.band.name}
             </h1>
           </div>
-          <p className="text-xl md:text-2xl text-gray-600 font-light">
+          <p 
+            className={`text-xl md:text-2xl font-light ${hasCustomBackground ? 'text-white' : 'text-gray-600'}`}
+            style={hasCustomBackground ? { textShadow: '1px 1px 2px rgba(0,0,0,0.5)' } : {}}
+          >
             {bandData.band.tagline}
           </p>
         </motion.div>
@@ -92,19 +167,23 @@ const Hero = ({ onPlayClick }) => {
           <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </motion.button>
 
-        {/* Floating Elements with theme colors */}
-        <motion.div
-          className="absolute top-20 left-10 w-20 h-20 rounded-full opacity-60"
-          style={{ backgroundColor: 'var(--theme-primary)' }}
-          animate={{ y: [0, -20, 0], rotate: [0, 180, 360] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-10 w-16 h-16 rounded-full opacity-60"
-          style={{ backgroundColor: 'var(--theme-secondary)' }}
-          animate={{ y: [0, 20, 0], rotate: [0, -180, -360] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Floating Elements with theme colors - only show if not using custom background */}
+        {!hasCustomBackground && (
+          <>
+            <motion.div
+              className="absolute top-20 left-10 w-20 h-20 rounded-full opacity-60"
+              style={{ backgroundColor: 'var(--theme-primary)' }}
+              animate={{ y: [0, -20, 0], rotate: [0, 180, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute bottom-20 right-10 w-16 h-16 rounded-full opacity-60"
+              style={{ backgroundColor: 'var(--theme-secondary)' }}
+              animate={{ y: [0, 20, 0], rotate: [0, -180, -360] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </>
+        )}
       </div>
     </div>
   );

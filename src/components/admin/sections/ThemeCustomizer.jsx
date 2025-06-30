@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../../common/SafeIcon';
 import { useAdmin } from '../../../contexts/AdminContext';
+import FileSelector from '../common/FileSelector';
 
-const { FiPalette, FiSave, FiRotateCcw, FiEye, FiRefreshCw } = FiIcons;
+const { FiPalette, FiSave, FiRotateCcw, FiEye, FiRefreshCw, FiImage, FiFolder, FiUpload } = FiIcons;
 
 const ThemeCustomizer = () => {
   const { data, updateTheme } = useAdmin();
@@ -12,6 +13,7 @@ const ThemeCustomizer = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(Date.now());
+  const [showFileSelector, setShowFileSelector] = useState(false);
 
   const colorPresets = [
     { name: 'Cosmic Purple', primaryColor: '#8B5CF6', secondaryColor: '#EC4899', accentColor: '#06B6D4' },
@@ -33,6 +35,12 @@ const ThemeCustomizer = () => {
     { value: 'Source Sans Pro', label: 'Source Sans Pro (Clean)' }
   ];
 
+  const backgroundOptions = [
+    { value: 'gradient', label: 'Gradient Background' },
+    { value: 'image', label: 'Full Background Image' },
+    { value: 'overlay', label: 'Image with Gradient Overlay' }
+  ];
+
   // Apply theme changes immediately to CSS variables (live preview)
   useEffect(() => {
     if (theme) {
@@ -46,9 +54,14 @@ const ThemeCustomizer = () => {
       root.style.setProperty('--theme-text', theme.textColor);
       root.style.setProperty('--theme-font-family', theme.fontFamily);
       
+      // Hero background settings
+      root.style.setProperty('--theme-hero-bg-image', theme.heroBackgroundImage || '');
+      root.style.setProperty('--theme-hero-bg-type', theme.heroBackgroundType || 'gradient');
+      root.style.setProperty('--theme-hero-overlay-opacity', (theme.heroOverlayOpacity || 0.3));
+
       // Apply font family to body for live preview
       document.body.style.fontFamily = theme.fontFamily;
-      
+
       // Create RGB values for transparency effects
       const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -58,23 +71,29 @@ const ThemeCustomizer = () => {
           b: parseInt(result[3], 16)
         } : null;
       };
-      
+
       const primaryRgb = hexToRgb(theme.primaryColor);
       const secondaryRgb = hexToRgb(theme.secondaryColor);
       const accentRgb = hexToRgb(theme.accentColor);
-      
+
       if (primaryRgb && secondaryRgb && accentRgb) {
-        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
-        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
-        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r},${primaryRgb.g},${primaryRgb.b}`);
+        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r},${secondaryRgb.g},${secondaryRgb.b}`);
+        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r},${accentRgb.g},${accentRgb.b}`);
       }
-      
+
       // Force re-render of components that use theme
-      window.dispatchEvent(new CustomEvent('themePreviewUpdate', { detail: { theme, timestamp: Date.now() } }));
+      window.dispatchEvent(new CustomEvent('themePreviewUpdate', {
+        detail: { theme, timestamp: Date.now() }
+      }));
     }
   }, [theme]);
 
   const handleColorChange = (field, value) => {
+    setTheme(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleHeroBackgroundChange = (field, value) => {
     setTheme(prev => ({ ...prev, [field]: value }));
   };
 
@@ -97,7 +116,10 @@ const ThemeCustomizer = () => {
       accentColor: "#06B6D4",
       backgroundColor: "#FFFFFF",
       textColor: "#1F2937",
-      fontFamily: "Poppins"
+      fontFamily: "Poppins",
+      heroBackgroundType: "gradient",
+      heroBackgroundImage: "",
+      heroOverlayOpacity: 0.3
     };
     setTheme(defaultTheme);
   };
@@ -106,7 +128,37 @@ const ThemeCustomizer = () => {
     // Force a re-render of the preview
     setLastSaved(Date.now());
     // Trigger theme update event
-    window.dispatchEvent(new CustomEvent('themePreviewUpdate', { detail: { theme, timestamp: Date.now() } }));
+    window.dispatchEvent(new CustomEvent('themePreviewUpdate', {
+      detail: { theme, timestamp: Date.now() }
+    }));
+  };
+
+  const handleFileSelect = (file) => {
+    setTheme(prev => ({ ...prev, heroBackgroundImage: file.url }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size should be less than 10MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target.result;
+        setTheme(prev => ({ ...prev, heroBackgroundImage: imageUrl }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -162,9 +214,18 @@ const ThemeCustomizer = () => {
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex space-x-1">
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primaryColor }} />
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.secondaryColor }} />
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accentColor }} />
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: preset.primaryColor }}
+                      />
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: preset.secondaryColor }}
+                      />
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: preset.accentColor }}
+                      />
                     </div>
                   </div>
                   <p className="text-sm font-medium text-gray-700">{preset.name}</p>
@@ -260,6 +321,128 @@ const ThemeCustomizer = () => {
             </div>
           </div>
 
+          {/* Hero Background Customization */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <SafeIcon icon={FiImage} className="mr-2" />
+              Hero Background
+            </h2>
+            
+            {/* Background Type Selection */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Background Type
+                </label>
+                <select
+                  value={theme.heroBackgroundType || 'gradient'}
+                  onChange={(e) => handleHeroBackgroundChange('heroBackgroundType', e.target.value)}
+                  className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+                >
+                  {backgroundOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Background Image Upload/Selection */}
+              {(theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Background Image
+                  </label>
+                  
+                  {/* Image Upload Options */}
+                  <div className="space-y-4">
+                    {/* Direct Upload */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-purple-400 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="heroBackgroundUpload"
+                      />
+                      <label htmlFor="heroBackgroundUpload" className="cursor-pointer">
+                        <SafeIcon icon={FiUpload} className="mx-auto text-2xl text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600">Click to upload background image</p>
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB (1920x1080 recommended)</p>
+                      </label>
+                    </div>
+
+                    {/* URL Input */}
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="url"
+                        value={theme.heroBackgroundImage || ''}
+                        onChange={(e) => handleHeroBackgroundChange('heroBackgroundImage', e.target.value)}
+                        className="flex-1 px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+                        placeholder="Or enter image URL..."
+                      />
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowFileSelector(true)}
+                        className="px-4 py-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <SafeIcon icon={FiFolder} />
+                      </motion.button>
+                    </div>
+
+                    {/* Image Preview */}
+                    {theme.heroBackgroundImage && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Preview
+                        </label>
+                        <div className="w-full h-32 bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200">
+                          <img
+                            src={theme.heroBackgroundImage}
+                            alt="Hero background preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-full hidden items-center justify-center text-red-500">
+                            <SafeIcon icon={FiImage} className="text-2xl" />
+                            <span className="ml-2 text-sm">Failed to load image</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Overlay Opacity (for overlay type) */}
+              {theme.heroBackgroundType === 'overlay' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Overlay Opacity: {Math.round((theme.heroOverlayOpacity || 0.3) * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="0.8"
+                    step="0.1"
+                    value={theme.heroOverlayOpacity || 0.3}
+                    onChange={(e) => handleHeroBackgroundChange('heroOverlayOpacity', parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span>80%</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Typography */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Typography</h2>
@@ -289,12 +472,13 @@ const ThemeCustomizer = () => {
               className="flex items-center space-x-2 px-6 py-3 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
+              style={{
+                backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+              }}
             >
               <SafeIcon icon={FiSave} />
               <span>{isSaving ? 'Saving...' : 'Save Theme'}</span>
             </motion.button>
-
             <motion.button
               onClick={resetToDefault}
               className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors"
@@ -310,37 +494,58 @@ const ThemeCustomizer = () => {
         {/* Live Preview */}
         <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Live Preview</h2>
-          <div 
-            className="p-6 rounded-xl border-2 border-gray-200 min-h-[500px]"
-            style={{ 
-              backgroundImage: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`,
-              fontFamily: theme.fontFamily 
+          <div
+            className="p-6 rounded-xl border-2 border-gray-200 min-h-[500px] relative overflow-hidden"
+            style={{
+              fontFamily: theme.fontFamily,
+              ...(theme.heroBackgroundType === 'gradient' && {
+                backgroundImage: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`
+              }),
+              ...(theme.heroBackgroundType === 'image' && theme.heroBackgroundImage && {
+                backgroundImage: `url(${theme.heroBackgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }),
+              ...(theme.heroBackgroundType === 'overlay' && theme.heroBackgroundImage && {
+                backgroundImage: `linear-gradient(rgba(${theme.primaryColor.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(',')}, ${theme.heroOverlayOpacity || 0.3}), rgba(${theme.secondaryColor.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(',')}, ${theme.heroOverlayOpacity || 0.3})), url(${theme.heroBackgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              })
             }}
-            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}`} // Force re-render on changes
+            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}-${theme.heroBackgroundType}-${theme.heroBackgroundImage}`}
           >
             {/* Preview Header */}
-            <div className="text-center mb-6">
-              <div 
+            <div className="text-center mb-6 relative z-10">
+              <div
                 className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
+                style={{
+                  backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                }}
               >
                 <SafeIcon icon={FiPalette} className="text-white text-xl" />
               </div>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: theme.textColor }}>
+              <h1
+                className="text-2xl font-bold mb-2"
+                style={{ color: theme.textColor }}
+              >
                 Band Name
               </h1>
               <p className="text-gray-600">Album Title - Preview</p>
             </div>
 
             {/* Preview Buttons */}
-            <div className="space-y-3 mb-6">
-              <button 
+            <div className="space-y-3 mb-6 relative z-10">
+              <button
                 className="w-full py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg"
-                style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
+                style={{
+                  backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                }}
               >
                 Primary Button
               </button>
-              <button 
+              <button
                 className="w-full py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg"
                 style={{ backgroundColor: theme.accentColor }}
               >
@@ -349,11 +554,14 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Preview Content Card */}
-            <div 
-              className="p-4 rounded-xl mb-4"
+            <div
+              className="p-4 rounded-xl mb-4 relative z-10"
               style={{ backgroundColor: `${theme.primaryColor}10` }}
             >
-              <h3 className="font-semibold mb-2" style={{ color: theme.textColor }}>
+              <h3
+                className="font-semibold mb-2"
+                style={{ color: theme.textColor }}
+              >
                 Sample Content
               </h3>
               <p style={{ color: theme.textColor }}>
@@ -363,51 +571,56 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Preview Music Player */}
-            <div className="bg-white/80 rounded-xl p-4">
+            <div className="bg-white/80 rounded-xl p-4 relative z-10">
               <div className="flex items-center space-x-4 mb-3">
-                <div 
+                <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: theme.primaryColor }}
                 >
                   <SafeIcon icon={FiPalette} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium" style={{ color: theme.textColor }}>
+                  <h4
+                    className="font-medium"
+                    style={{ color: theme.textColor }}
+                  >
                     Sample Song
                   </h4>
                   <p className="text-sm text-gray-600">Artist Name</p>
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                <div 
+                <div
                   className="h-2 rounded-full transition-all duration-300"
-                  style={{ 
+                  style={{
                     backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
-                    width: '35%' 
+                    width: '35%'
                   }}
                 />
               </div>
               <div className="flex justify-center space-x-4">
-                <button 
+                <button
                   className="p-2 rounded-full"
-                  style={{ 
+                  style={{
                     backgroundColor: `${theme.primaryColor}20`,
-                    color: theme.primaryColor 
+                    color: theme.primaryColor
                   }}
                 >
                   ⏮
                 </button>
-                <button 
+                <button
                   className="p-3 rounded-full text-white"
-                  style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
+                  style={{
+                    backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                  }}
                 >
                   ▶
                 </button>
-                <button 
+                <button
                   className="p-2 rounded-full"
-                  style={{ 
+                  style={{
                     backgroundColor: `${theme.primaryColor}20`,
-                    color: theme.primaryColor 
+                    color: theme.primaryColor
                   }}
                 >
                   ⏭
@@ -416,15 +629,25 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Theme Info */}
-            <div className="mt-6 text-xs text-gray-500 space-y-1">
+            <div className="mt-6 text-xs text-gray-500 space-y-1 relative z-10">
               <p><strong>Primary:</strong> {theme.primaryColor}</p>
               <p><strong>Secondary:</strong> {theme.secondaryColor}</p>
               <p><strong>Accent:</strong> {theme.accentColor}</p>
               <p><strong>Font:</strong> {theme.fontFamily}</p>
+              <p><strong>Background:</strong> {theme.heroBackgroundType}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* File Selector */}
+      <FileSelector
+        isOpen={showFileSelector}
+        onClose={() => setShowFileSelector(false)}
+        onSelect={handleFileSelect}
+        fileTypes={['image']}
+        title="Select Hero Background Image"
+      />
     </motion.div>
   );
 };

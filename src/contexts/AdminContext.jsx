@@ -39,7 +39,10 @@ const initialData = {
     accentColor: "#06B6D4",
     backgroundColor: "#FFFFFF",
     textColor: "#1F2937",
-    fontFamily: "Poppins"
+    fontFamily: "Poppins",
+    heroBackgroundType: "gradient", // 'gradient', 'image', 'overlay'
+    heroBackgroundImage: "",
+    heroOverlayOpacity: 0.3
   },
   translations: {
     en: {
@@ -239,7 +242,16 @@ export const AdminProvider = ({ children }) => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        return { ...initialData, ...parsedData };
+        // Ensure new theme properties exist
+        const mergedData = {
+          ...initialData,
+          ...parsedData,
+          theme: {
+            ...initialData.theme,
+            ...parsedData.theme
+          }
+        };
+        return mergedData;
       } catch (error) {
         console.error('Error parsing saved data:', error);
       }
@@ -270,6 +282,11 @@ export const AdminProvider = ({ children }) => {
       root.style.setProperty('--theme-background', data.theme.backgroundColor);
       root.style.setProperty('--theme-text', data.theme.textColor);
       root.style.setProperty('--theme-font-family', data.theme.fontFamily);
+      
+      // Hero background settings
+      root.style.setProperty('--theme-hero-bg-image', data.theme.heroBackgroundImage || '');
+      root.style.setProperty('--theme-hero-bg-type', data.theme.heroBackgroundType || 'gradient');
+      root.style.setProperty('--theme-hero-overlay-opacity', (data.theme.heroOverlayOpacity || 0.3));
 
       // Apply font family to body
       document.body.style.fontFamily = data.theme.fontFamily;
@@ -289,14 +306,14 @@ export const AdminProvider = ({ children }) => {
       const accentRgb = hexToRgb(data.theme.accentColor);
 
       if (primaryRgb && secondaryRgb && accentRgb) {
-        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}`);
-        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}`);
-        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`);
+        root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r},${primaryRgb.g},${primaryRgb.b}`);
+        root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r},${secondaryRgb.g},${secondaryRgb.b}`);
+        root.style.setProperty('--theme-accent-rgb', `${accentRgb.r},${accentRgb.g},${accentRgb.b}`);
       }
 
       // Trigger a custom event to notify components of theme change
-      window.dispatchEvent(new CustomEvent('themeUpdated', { 
-        detail: { theme: data.theme, trigger: themeUpdateTrigger } 
+      window.dispatchEvent(new CustomEvent('themeUpdated', {
+        detail: { theme: data.theme, trigger: themeUpdateTrigger }
       }));
     }
   }, [data.theme, themeUpdateTrigger]);
@@ -419,11 +436,11 @@ export const AdminProvider = ({ children }) => {
 
   const createPodcast = (podcast) => {
     try {
-      const newPodcast = { 
-        ...podcast, 
-        id: Date.now(), 
-        isActive: true, 
-        publishDate: new Date().toISOString().split('T')[0] 
+      const newPodcast = {
+        ...podcast,
+        id: Date.now(),
+        isActive: true,
+        publishDate: new Date().toISOString().split('T')[0]
       };
       setData(prev => ({
         ...prev,
@@ -615,7 +632,10 @@ export const AdminProvider = ({ children }) => {
       
       setData(prev => ({
         ...prev,
-        adminCredentials: { ...prev.adminCredentials, password: newPassword }
+        adminCredentials: {
+          ...prev.adminCredentials,
+          password: newPassword
+        }
       }));
       
       return { success: true };
@@ -651,13 +671,16 @@ export const AdminProvider = ({ children }) => {
       const tempPassword = Math.random().toString(36).substring(2, 10);
       setData(prev => ({
         ...prev,
-        adminCredentials: { ...prev.adminCredentials, password: tempPassword }
+        adminCredentials: {
+          ...prev.adminCredentials,
+          password: tempPassword
+        }
       }));
       
-      return { 
-        success: true, 
+      return {
+        success: true,
         tempPassword,
-        message: `Temporary password: ${tempPassword}\nPlease change it after logging in.` 
+        message: `Temporary password: ${tempPassword}\nPlease change it after logging in.`
       };
     } catch (error) {
       console.error('Error resetting password:', error);
