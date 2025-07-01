@@ -1,4 +1,5 @@
 export default {
+  GET_STARTED_QUESTID: 'c-greta-get-started',
   QUEST_ONBOARDING_QUESTID: 'c-greta-onboarding',
   USER_ID: 'u-dafc24bc-b208-434f-8139-2666d0cf80f7',
   APIKEY: 'k-387ba8e1-c6e5-4cab-b20a-c1495613084d',
