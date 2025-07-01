@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React,{useState} from 'react';
+import {motion,AnimatePresence} from 'framer-motion';
+import {useNavigate} from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
+import {useAuth} from '../contexts/AuthContext';
 
-const { FiMessageCircle, FiHeart, FiUser, FiSend, FiClock } = FiIcons;
+const {FiMessageCircle,FiHeart,FiUser,FiSend,FiClock,FiLogIn} = FiIcons;
 
 const initialComments = [
   {
@@ -63,12 +65,21 @@ const initialComments = [
 ];
 
 const FanWall = () => {
-  const [comments, setComments] = useState(initialComments);
-  const [newComment, setNewComment] = useState('');
-  const [username, setUsername] = useState('');
-  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [comments,setComments] = useState(initialComments);
+  const [newComment,setNewComment] = useState('');
+  const [username,setUsername] = useState('');
+  const [showCommentForm,setShowCommentForm] = useState(false);
+  const [showLoginPrompt,setShowLoginPrompt] = useState(false);
+  
+  const {isAuthenticated,user} = useAuth();
+  const navigate = useNavigate();
 
   const handleLike = (commentId) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setComments(comments.map(comment =>
       comment.id === commentId
         ? {
@@ -78,6 +89,14 @@ const FanWall = () => {
           }
         : comment
     ));
+  };
+
+  const handleShowCommentForm = () => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setShowCommentForm(true);
   };
 
   const handleSubmitComment = (e) => {
@@ -92,23 +111,27 @@ const FanWall = () => {
         liked: false,
         status: "pending" // New comments need approval
       };
-      
+
       // Add to comments but won't show until approved
       setComments([newCommentObj, ...comments]);
       setNewComment('');
       setUsername('');
       setShowCommentForm(false);
-      
+
       // Show confirmation message
       alert('Thank you for your comment! It will be visible after review by our moderators.');
     }
+  };
+
+  const handleLoginRedirect = () => {
+    navigate('/login');
   };
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
     const commentTime = new Date(timestamp);
     const diffInHours = Math.floor((now - commentTime) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
@@ -149,7 +172,7 @@ const FanWall = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <motion.button
-            onClick={() => setShowCommentForm(!showCommentForm)}
+            onClick={handleShowCommentForm}
             className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -158,6 +181,55 @@ const FanWall = () => {
             <span>Share Your Thoughts</span>
           </motion.button>
         </motion.div>
+
+        {/* Login Prompt Modal */}
+        <AnimatePresence>
+          {showLoginPrompt && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLoginPrompt(false)}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <SafeIcon icon={FiLogIn} className="text-white text-2xl" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  Sign In Required
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Please sign in to interact with the fan wall, like comments, and share your thoughts with the community.
+                </p>
+                <div className="flex space-x-3">
+                  <motion.button
+                    onClick={handleLoginRedirect}
+                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Sign In
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setShowLoginPrompt(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Browse Only
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Comment Form */}
         <AnimatePresence>
@@ -265,7 +337,10 @@ const FanWall = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <SafeIcon icon={FiHeart} className={`text-sm ${comment.liked ? 'fill-current' : ''}`} />
+                        <SafeIcon
+                          icon={FiHeart}
+                          className={`text-sm ${comment.liked ? 'fill-current' : ''}`}
+                        />
                         <span className="text-sm font-medium">{comment.likes}</span>
                       </motion.button>
                     </div>

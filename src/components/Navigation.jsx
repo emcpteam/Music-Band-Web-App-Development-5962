@@ -1,32 +1,46 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React,{useState} from 'react';
+import {motion,AnimatePresence} from 'framer-motion';
+import {useNavigate} from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import { useBandData } from '../contexts/AdminContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import {useBandData} from '../contexts/AdminContext';
+import {useLanguage} from '../contexts/LanguageContext';
+import {useAuth} from '../contexts/AuthContext';
 import LanguageSelector from './common/LanguageSelector';
 import CartButton from './cart/CartButton';
 
-const { FiMenu, FiX, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiHome, FiShield, FiGlobe } = FiIcons;
+const {FiMenu,FiX,FiMusic,FiImage,FiMic,FiMessageCircle,FiShoppingBag,FiHome,FiShield,FiGlobe,FiUser,FiLogIn} = FiIcons;
 
-const Navigation = ({ onNavigate, refs }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const Navigation = ({onNavigate,refs}) => {
+  const [isOpen,setIsOpen] = useState(false);
   const navigate = useNavigate();
   const bandData = useBandData();
-  const { t } = useLanguage();
+  const {t} = useLanguage();
+  const {isAuthenticated,user} = useAuth();
 
   const navItems = [
-    { icon: FiHome, label: t('home'), ref: refs.heroRef },
-    { icon: FiMusic, label: t('music'), ref: refs.musicRef },
-    { icon: FiImage, label: t('gallery'), ref: refs.bookletRef },
-    { icon: FiMic, label: t('podcast'), ref: refs.podcastRef },
-    { icon: FiMessageCircle, label: t('fanWall'), ref: refs.fanWallRef },
-    { icon: FiShoppingBag, label: t('merch'), ref: refs.merchRef },
+    {icon: FiHome,label: t('home'),ref: refs.heroRef},
+    {icon: FiMusic,label: t('music'),ref: refs.musicRef},
+    {icon: FiImage,label: t('gallery'),ref: refs.bookletRef},
+    {icon: FiMic,label: t('podcast'),ref: refs.podcastRef},
+    {icon: FiMessageCircle,label: t('fanWall'),ref: refs.fanWallRef},
+    {icon: FiShoppingBag,label: t('merch'),ref: refs.merchRef},
   ];
 
   const handleAdminAccess = () => {
     navigate('/admin');
+    setIsOpen(false);
+  };
+
+  const handleAuthAction = () => {
+    if (isAuthenticated) {
+      // User is logged in, could show profile or logout options
+      // For now, just navigate to profile/settings
+      navigate('/login');
+    } else {
+      // User not logged in, go to login
+      navigate('/login');
+    }
     setIsOpen(false);
   };
 
@@ -46,7 +60,11 @@ const Navigation = ({ onNavigate, refs }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Band Name */}
-            <motion.div className="flex items-center" whileHover={{ scale: 1.05 }}>
+            <motion.div 
+              className="flex items-center cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              onClick={() => onNavigate(refs.heroRef)}
+            >
               <span className="font-semibold theme-text text-xl">{bandData.band.name}</span>
             </motion.div>
 
@@ -57,7 +75,7 @@ const Navigation = ({ onNavigate, refs }) => {
                   key={item.label}
                   onClick={() => onNavigate(item.ref)}
                   className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-current"
-                  style={{ '--hover-color': 'var(--theme-primary)' }}
+                  style={{'--hover-color': 'var(--theme-primary)'}}
                   whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -65,12 +83,27 @@ const Navigation = ({ onNavigate, refs }) => {
                   <span className="text-sm font-medium">{item.label}</span>
                 </motion.button>
               ))}
-              
+
               {/* Cart Button - Desktop */}
               <CartButton />
-              
+
               {/* Language Selector - Desktop */}
               <LanguageSelector />
+
+              {/* Auth Button - Desktop */}
+              <motion.button
+                onClick={handleAuthAction}
+                className="flex items-center space-x-2 text-gray-600 hover:text-current transition-colors"
+                style={{'--hover-color': 'var(--theme-primary)'}}
+                whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
+                whileTap={{ scale: 0.95 }}
+                title={isAuthenticated ? 'Profile' : 'Sign In'}
+              >
+                <SafeIcon icon={isAuthenticated ? FiUser : FiLogIn} className="text-sm" />
+                <span className="text-sm font-medium">
+                  {isAuthenticated ? 'Profile' : 'Sign In'}
+                </span>
+              </motion.button>
 
               {/* Admin Access - Desktop */}
               <motion.button
@@ -126,10 +159,10 @@ const Navigation = ({ onNavigate, refs }) => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{
-                      x: 5,
-                      backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)',
-                      color: 'var(--theme-primary)'
+                    whileHover={{ 
+                      x: 5, 
+                      backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)', 
+                      color: 'var(--theme-primary)' 
                     }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -156,27 +189,50 @@ const Navigation = ({ onNavigate, refs }) => {
                   </div>
                 </div>
 
-                {/* Admin Access - Mobile/Tablet */}
+                {/* Auth Button - Mobile/Tablet */}
                 <motion.button
-                  onClick={handleAdminAccess}
+                  onClick={handleAuthAction}
                   className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all border-t border-gray-200 mt-4 pt-4"
                   style={{
                     color: 'var(--theme-primary)',
                     backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
                   }}
-                  whileHover={{
-                    x: 5,
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)'
-                  }}
+                  whileHover={{ x: 5, backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)' }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div
+                  <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
                   >
-                    <SafeIcon
-                      icon={FiShield}
-                      className="text-sm"
+                    <SafeIcon 
+                      icon={isAuthenticated ? FiUser : FiLogIn} 
+                      className="text-sm" 
+                      style={{ color: 'var(--theme-primary)' }}
+                    />
+                  </div>
+                  <span className="text-base font-medium">
+                    {isAuthenticated ? 'Profile' : 'Sign In'}
+                  </span>
+                </motion.button>
+
+                {/* Admin Access - Mobile/Tablet */}
+                <motion.button
+                  onClick={handleAdminAccess}
+                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all"
+                  style={{
+                    color: 'var(--theme-primary)',
+                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
+                  }}
+                  whileHover={{ x: 5, backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)' }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
+                  >
+                    <SafeIcon 
+                      icon={FiShield} 
+                      className="text-sm" 
                       style={{ color: 'var(--theme-primary)' }}
                     />
                   </div>

@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
-import { useAdmin } from '../contexts/AdminContext';
+import React,{useState,useRef,useEffect} from 'react';
+import {motion} from 'framer-motion';
+import {useAuth} from '../contexts/AuthContext';
+import {useAdmin} from '../contexts/AdminContext';
 import Hero from './Hero';
 import MusicPlayer from './MusicPlayer';
 import MultimediaBooklet from './MultimediaBooklet';
@@ -13,11 +13,11 @@ import Navigation from './Navigation';
 import TrackingCodes from './TrackingCodes';
 
 const MainApp = () => {
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const { themeUpdateTrigger } = useAdmin();
+  const [currentTrack,setCurrentTrack] = useState(0);
+  const [isPlaying,setIsPlaying] = useState(false);
+  const {themeUpdateTrigger} = useAdmin();
   const audioRef = useRef(null);
-
+  
   // Refs for navigation
   const heroRef = useRef(null);
   const musicRef = useRef(null);
@@ -53,8 +53,8 @@ const MainApp = () => {
     >
       {/* Analytics & Tracking Codes */}
       <TrackingCodes />
-
-      <Navigation
+      
+      <Navigation 
         onNavigate={scrollToSection}
         refs={{
           heroRef,
