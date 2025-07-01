@@ -10,7 +10,6 @@ const { FiPlay, FiMusic } = FiIcons;
 const Hero = ({ onPlayClick }) => {
   const bandData = useBandData();
   const { t } = useLanguage();
-
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
   const theme = bandData.theme;
 
@@ -96,7 +95,44 @@ const Hero = ({ onPlayClick }) => {
     };
   };
 
+  // Get hero title style based on theme settings
+  const getHeroTitleStyle = () => {
+    const hasCustomBackground = theme?.heroBackgroundType === 'image' || theme?.heroBackgroundType === 'overlay';
+    
+    switch (theme?.heroTitleStyle) {
+      case 'solid':
+        return {
+          color: theme.heroTitleColor || '#FFFFFF',
+          textShadow: theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none'
+        };
+      case 'gradient':
+        return {
+          background: generateGradient(),
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          textShadow: theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none'
+        };
+      case 'auto':
+      default:
+        if (hasCustomBackground) {
+          return {
+            color: 'white',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+          };
+        } else {
+          return {
+            background: generateGradient(),
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          };
+        }
+    }
+  };
+
   const backgroundStyle = getBackgroundStyle();
+  const heroTitleStyle = getHeroTitleStyle();
   const hasCustomBackground = theme?.heroBackgroundType === 'image' || theme?.heroBackgroundType === 'overlay';
 
   return (
@@ -118,16 +154,16 @@ const Hero = ({ onPlayClick }) => {
         {!hasCustomBackground && (
           <div className="absolute inset-0 opacity-10">
             <div 
-              className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl"
-              style={{ backgroundColor: 'var(--theme-primary)' }}
+              className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl" 
+              style={{ backgroundColor: 'var(--theme-primary)' }} 
             />
             <div 
-              className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-              style={{ backgroundColor: 'var(--theme-secondary)' }}
+              className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" 
+              style={{ backgroundColor: 'var(--theme-secondary)' }} 
             />
             <div 
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl"
-              style={{ backgroundColor: 'var(--theme-accent)' }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl" 
+              style={{ backgroundColor: 'var(--theme-accent)' }} 
             />
           </div>
         )}
@@ -170,18 +206,8 @@ const Hero = ({ onPlayClick }) => {
                 <SafeIcon icon={FiMusic} className="text-white text-xl" />
               </div>
               <h1 
-                className={`text-4xl md:text-6xl font-bold ${hasCustomBackground ? 'text-white' : 'bg-gradient-to-r bg-clip-text text-transparent'}`}
-                style={{
-                  ...(hasCustomBackground ? {
-                    color: 'white',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                  } : {
-                    background: generateGradient(),
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  })
-                }}
+                className="text-4xl md:text-6xl font-bold"
+                style={heroTitleStyle}
               >
                 {bandData.band.name}
               </h1>

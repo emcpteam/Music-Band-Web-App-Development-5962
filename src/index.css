@@ -18,6 +18,9 @@
   --theme-hero-bg-type: gradient;
   --theme-hero-bg-image: '';
   --theme-hero-overlay-opacity: 0.3;
+  --theme-hero-title-color: #FFFFFF;
+  --theme-hero-title-style: gradient;
+  --theme-hero-title-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 * {
@@ -96,6 +99,29 @@ body {
   background-color: var(--theme-background);
 }
 
+/* Hero title styling based on theme settings */
+.hero-title {
+  color: var(--theme-hero-title-color);
+  text-shadow: var(--theme-hero-title-shadow);
+}
+
+.hero-title-solid {
+  color: var(--theme-hero-title-color);
+  text-shadow: var(--theme-hero-title-shadow);
+}
+
+.hero-title-gradient {
+  background: linear-gradient(var(--theme-gradient-direction), var(--theme-primary), var(--theme-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: var(--theme-hero-title-shadow);
+}
+
+.hero-title-auto {
+  /* Will be dynamically set based on background type */
+}
+
 /* Enhanced Button styles with theme support */
 .btn-primary {
   background-image: linear-gradient(var(--theme-gradient-direction), var(--theme-primary), var(--theme-secondary));
@@ -129,24 +155,14 @@ body {
 
 /* Advanced gradient animations */
 @keyframes gradient-shift {
-  0% { 
-    background-position: 0% 50%; 
-  }
-  50% { 
-    background-position: 100% 50%; 
-  }
-  100% { 
-    background-position: 0% 50%; 
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes gradient-rotate {
-  0% { 
-    transform: rotate(0deg); 
-  }
-  100% { 
-    transform: rotate(360deg); 
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .theme-gradient-animated {
@@ -229,12 +245,10 @@ body {
 }
 
 .hero-bg-overlay {
-  background-image: 
-    linear-gradient(
-      rgba(var(--theme-primary-rgb), var(--theme-hero-overlay-opacity)), 
-      rgba(var(--theme-secondary-rgb), var(--theme-hero-overlay-opacity))
-    ), 
-    var(--theme-hero-bg-image);
+  background-image: linear-gradient(
+    rgba(var(--theme-primary-rgb), var(--theme-hero-overlay-opacity)),
+    rgba(var(--theme-secondary-rgb), var(--theme-hero-overlay-opacity))
+  ), var(--theme-hero-bg-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -274,7 +288,7 @@ body {
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
   }
-  
+
   .theme-nav {
     background: rgba(0, 0, 0, 0.8);
     border-bottom: 1px solid rgba(var(--theme-primary-rgb), 0.2);

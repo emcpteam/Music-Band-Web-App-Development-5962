@@ -5,7 +5,7 @@ import SafeIcon from '../../../common/SafeIcon';
 import { useAdmin } from '../../../contexts/AdminContext';
 import FileSelector from '../common/FileSelector';
 
-const { FiPalette, FiSave, FiRotateCcw, FiEye, FiRefreshCw, FiImage, FiFolder, FiUpload } = FiIcons;
+const { FiPalette, FiSave, FiRotateCcw, FiEye, FiRefreshCw, FiImage, FiFolder, FiUpload, FiType } = FiIcons;
 
 const ThemeCustomizer = () => {
   const { data, updateTheme } = useAdmin();
@@ -63,6 +63,12 @@ const ThemeCustomizer = () => {
     { value: 'multi-stop', label: 'Multi-Stop Gradient' }
   ];
 
+  const titleStyleOptions = [
+    { value: 'auto', label: 'Auto (Smart Detection)' },
+    { value: 'solid', label: 'Solid Color' },
+    { value: 'gradient', label: 'Gradient Color' }
+  ];
+
   // Apply theme changes immediately to CSS variables (live preview)
   useEffect(() => {
     if (theme) {
@@ -80,6 +86,11 @@ const ThemeCustomizer = () => {
       root.style.setProperty('--theme-hero-bg-image', theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', theme.heroBackgroundType || 'gradient');
       root.style.setProperty('--theme-hero-overlay-opacity', (theme.heroOverlayOpacity || 0.3));
+      
+      // Hero title settings
+      root.style.setProperty('--theme-hero-title-color', theme.heroTitleColor || '#FFFFFF');
+      root.style.setProperty('--theme-hero-title-style', theme.heroTitleStyle || 'gradient');
+      root.style.setProperty('--theme-hero-title-shadow', theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none');
       
       // Advanced gradient settings
       root.style.setProperty('--theme-gradient-direction', theme.gradientDirection || '45deg');
@@ -147,7 +158,10 @@ const ThemeCustomizer = () => {
       heroBackgroundImage: "",
       heroOverlayOpacity: 0.3,
       gradientDirection: "45deg",
-      gradientPattern: "linear"
+      gradientPattern: "linear",
+      heroTitleColor: "#FFFFFF",
+      heroTitleStyle: "gradient",
+      heroTitleShadow: true
     };
     setTheme(defaultTheme);
   };
@@ -203,6 +217,42 @@ const ThemeCustomizer = () => {
       case 'linear':
       default:
         return `linear-gradient(${gradientDirection}, ${primaryColor}, ${secondaryColor})`;
+    }
+  };
+
+  // Get hero title style for preview
+  const getHeroTitleStyle = () => {
+    const hasCustomBackground = theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay';
+    
+    switch (theme.heroTitleStyle) {
+      case 'solid':
+        return {
+          color: theme.heroTitleColor,
+          textShadow: theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none'
+        };
+      case 'gradient':
+        return {
+          background: generateGradientPreview(),
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          textShadow: theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none'
+        };
+      case 'auto':
+      default:
+        if (hasCustomBackground) {
+          return {
+            color: 'white',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+          };
+        } else {
+          return {
+            background: generateGradientPreview(),
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          };
+        }
     }
   };
 
@@ -373,6 +423,85 @@ const ThemeCustomizer = () => {
                   className="w-full h-16 rounded-xl border-2 border-gray-200"
                   style={{ background: generateGradientPreview() }}
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Hero Title Customization */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              <SafeIcon icon={FiType} className="mr-2" />
+              Hero Title Style
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title Style
+                </label>
+                <select
+                  value={theme.heroTitleStyle || 'auto'}
+                  onChange={(e) => handleHeroBackgroundChange('heroTitleStyle', e.target.value)}
+                  className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+                >
+                  {titleStyleOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Auto: Uses gradient on plain backgrounds, white on images
+                </p>
+              </div>
+
+              {theme.heroTitleStyle === 'solid' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Title Color
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="color"
+                      value={theme.heroTitleColor || '#FFFFFF'}
+                      onChange={(e) => handleHeroBackgroundChange('heroTitleColor', e.target.value)}
+                      className="w-12 h-12 border border-gray-200 rounded-xl cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={theme.heroTitleColor || '#FFFFFF'}
+                      onChange={(e) => handleHeroBackgroundChange('heroTitleColor', e.target.value)}
+                      className="flex-1 px-3 py-2 bg-white/80 border border-gray-200 rounded-lg focus:outline-none focus:border-purple-400"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="heroTitleShadow"
+                  checked={theme.heroTitleShadow !== false}
+                  onChange={(e) => handleHeroBackgroundChange('heroTitleShadow', e.target.checked)}
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="heroTitleShadow" className="text-sm text-gray-700">
+                  Add text shadow for better readability
+                </label>
+              </div>
+
+              {/* Title Style Preview */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title Style Preview
+                </label>
+                <div className="p-4 bg-gray-900 rounded-xl text-center">
+                  <h3 
+                    className="text-2xl font-bold"
+                    style={getHeroTitleStyle()}
+                  >
+                    Band Name
+                  </h3>
+                </div>
               </div>
             </div>
           </div>
@@ -616,7 +745,7 @@ const ThemeCustomizer = () => {
                 backgroundRepeat: 'no-repeat'
               })
             }}
-            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}-${theme.heroBackgroundType}-${theme.heroBackgroundImage}-${theme.gradientDirection}-${theme.gradientPattern}`}
+            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}-${theme.heroBackgroundType}-${theme.heroBackgroundImage}-${theme.gradientDirection}-${theme.gradientPattern}-${theme.heroTitleStyle}-${theme.heroTitleColor}`}
           >
             {/* Preview Header */}
             <div className="text-center mb-6 relative z-10">
@@ -630,10 +759,7 @@ const ThemeCustomizer = () => {
               </div>
               <h1 
                 className="text-2xl font-bold mb-2"
-                style={{ 
-                  color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'white' : theme.textColor, 
-                  textShadow: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none' 
-                }}
+                style={getHeroTitleStyle()}
               >
                 Band Name
               </h1>
@@ -750,6 +876,7 @@ const ThemeCustomizer = () => {
               <p><strong>Accent:</strong> {theme.accentColor}</p>
               <p><strong>Font:</strong> {theme.fontFamily}</p>
               <p><strong>Background:</strong> {theme.heroBackgroundType}</p>
+              <p><strong>Title Style:</strong> {theme.heroTitleStyle}</p>
               <p><strong>Gradient:</strong> {theme.gradientPattern} - {theme.gradientDirection}</p>
             </div>
           </div>

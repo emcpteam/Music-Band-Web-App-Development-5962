@@ -46,7 +46,7 @@ const initialData = {
         showLegalLinks: true
       },
       customLinks: [
-        // Example: { label: "Contact", url: "mailto:contact@band.com", newTab: false }
+        // Example: {label: "Contact", url: "mailto:contact@band.com", newTab: false}
       ]
     }
   },
@@ -64,7 +64,13 @@ const initialData = {
     fontFamily: "Poppins",
     heroBackgroundType: "gradient",
     heroBackgroundImage: "",
-    heroOverlayOpacity: 0.3
+    heroOverlayOpacity: 0.3,
+    gradientDirection: "45deg",
+    gradientPattern: "linear",
+    // New hero title customization
+    heroTitleColor: "#FFFFFF",
+    heroTitleStyle: "gradient", // 'solid', 'gradient', 'auto'
+    heroTitleShadow: true
   },
   systemConfig: {
     shipping: {
@@ -330,7 +336,7 @@ export const AdminProvider = ({ children }) => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        // Ensure new footer properties exist
+        // Ensure new theme properties exist
         const mergedData = {
           ...initialData,
           ...parsedData,
@@ -382,11 +388,20 @@ export const AdminProvider = ({ children }) => {
       root.style.setProperty('--theme-background', data.theme.backgroundColor);
       root.style.setProperty('--theme-text', data.theme.textColor);
       root.style.setProperty('--theme-font-family', data.theme.fontFamily);
-
+      
       // Hero background settings
       root.style.setProperty('--theme-hero-bg-image', data.theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', data.theme.heroBackgroundType || 'gradient');
       root.style.setProperty('--theme-hero-overlay-opacity', (data.theme.heroOverlayOpacity || 0.3));
+      
+      // Hero title settings
+      root.style.setProperty('--theme-hero-title-color', data.theme.heroTitleColor || '#FFFFFF');
+      root.style.setProperty('--theme-hero-title-style', data.theme.heroTitleStyle || 'gradient');
+      root.style.setProperty('--theme-hero-title-shadow', data.theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none');
+      
+      // Advanced gradient settings
+      root.style.setProperty('--theme-gradient-direction', data.theme.gradientDirection || '45deg');
+      root.style.setProperty('--theme-gradient-pattern', data.theme.gradientPattern || 'linear');
 
       // Apply font family to body
       document.body.style.fontFamily = data.theme.fontFamily;
@@ -493,7 +508,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        albums: prev.albums.map(album => 
+        albums: prev.albums.map(album =>
           album.id === id ? { ...album, ...updates } : album
         )
       }));
@@ -532,7 +547,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        songs: prev.songs.map(song => 
+        songs: prev.songs.map(song =>
           song.id === id ? { ...song, ...updates } : song
         )
       }));
@@ -575,7 +590,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        podcasts: prev.podcasts.map(podcast => 
+        podcasts: prev.podcasts.map(podcast =>
           podcast.id === id ? { ...podcast, ...updates } : podcast
         )
       }));
@@ -613,7 +628,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        media: prev.media.map(item => 
+        media: prev.media.map(item =>
           item.id === id ? { ...item, ...updates } : item
         )
       }));
@@ -651,7 +666,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        products: prev.products.map(product => 
+        products: prev.products.map(product =>
           product.id === id ? { ...product, ...updates } : product
         )
       }));
@@ -705,7 +720,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        comments: prev.comments.map(comment => 
+        comments: prev.comments.map(comment =>
           comment.id === commentId ? { ...comment, status: 'approved' } : comment
         )
       }));
@@ -718,7 +733,7 @@ export const AdminProvider = ({ children }) => {
     try {
       setData(prev => ({
         ...prev,
-        comments: prev.comments.map(comment => 
+        comments: prev.comments.map(comment =>
           comment.id === commentId ? { ...comment, status: 'rejected' } : comment
         )
       }));
@@ -743,7 +758,7 @@ export const AdminProvider = ({ children }) => {
       if (currentPassword !== data.adminCredentials.password) {
         return { success: false, error: 'Current password is incorrect' };
       }
-
+      
       if (newPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
@@ -787,6 +802,7 @@ export const AdminProvider = ({ children }) => {
       }
 
       const tempPassword = Math.random().toString(36).substring(2, 10);
+      
       setData(prev => ({
         ...prev,
         adminCredentials: {
