@@ -21,7 +21,9 @@ const ThemeCustomizer = () => {
     { name: 'Sunset Orange', primaryColor: '#F97316', secondaryColor: '#EF4444', accentColor: '#8B5CF6' },
     { name: 'Forest Green', primaryColor: '#10B981', secondaryColor: '#059669', accentColor: '#F59E0B' },
     { name: 'Royal Purple', primaryColor: '#7C3AED', secondaryColor: '#DB2777', accentColor: '#059669' },
-    { name: 'Electric Blue', primaryColor: '#0EA5E9', secondaryColor: '#8B5CF6', accentColor: '#F59E0B' }
+    { name: 'Electric Blue', primaryColor: '#0EA5E9', secondaryColor: '#8B5CF6', accentColor: '#F59E0B' },
+    { name: 'Neon Pink', primaryColor: '#EC4899', secondaryColor: '#F59E0B', accentColor: '#06B6D4' },
+    { name: 'Midnight Blue', primaryColor: '#1E40AF', secondaryColor: '#7C3AED', accentColor: '#10B981' }
   ];
 
   const fontOptions = [
@@ -38,7 +40,27 @@ const ThemeCustomizer = () => {
   const backgroundOptions = [
     { value: 'gradient', label: 'Gradient Background' },
     { value: 'image', label: 'Full Background Image' },
-    { value: 'overlay', label: 'Image with Gradient Overlay' }
+    { value: 'overlay', label: 'Image with Gradient Overlay' },
+    { value: 'pattern', label: 'Gradient Pattern' },
+    { value: 'animated', label: 'Animated Gradient' }
+  ];
+
+  const gradientDirections = [
+    { value: '45deg', label: 'Diagonal ↗' },
+    { value: '90deg', label: 'Vertical ↑' },
+    { value: '135deg', label: 'Diagonal ↖' },
+    { value: '180deg', label: 'Horizontal ←' },
+    { value: '225deg', label: 'Diagonal ↙' },
+    { value: '270deg', label: 'Vertical ↓' },
+    { value: '315deg', label: 'Diagonal ↘' },
+    { value: '0deg', label: 'Horizontal →' }
+  ];
+
+  const gradientPatterns = [
+    { value: 'linear', label: 'Linear Gradient' },
+    { value: 'radial', label: 'Radial Gradient' },
+    { value: 'conic', label: 'Conic Gradient' },
+    { value: 'multi-stop', label: 'Multi-Stop Gradient' }
   ];
 
   // Apply theme changes immediately to CSS variables (live preview)
@@ -53,11 +75,15 @@ const ThemeCustomizer = () => {
       root.style.setProperty('--theme-background', theme.backgroundColor);
       root.style.setProperty('--theme-text', theme.textColor);
       root.style.setProperty('--theme-font-family', theme.fontFamily);
-      
+
       // Hero background settings
       root.style.setProperty('--theme-hero-bg-image', theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', theme.heroBackgroundType || 'gradient');
       root.style.setProperty('--theme-hero-overlay-opacity', (theme.heroOverlayOpacity || 0.3));
+      
+      // Advanced gradient settings
+      root.style.setProperty('--theme-gradient-direction', theme.gradientDirection || '45deg');
+      root.style.setProperty('--theme-gradient-pattern', theme.gradientPattern || 'linear');
 
       // Apply font family to body for live preview
       document.body.style.fontFamily = theme.fontFamily;
@@ -119,7 +145,9 @@ const ThemeCustomizer = () => {
       fontFamily: "Poppins",
       heroBackgroundType: "gradient",
       heroBackgroundImage: "",
-      heroOverlayOpacity: 0.3
+      heroOverlayOpacity: 0.3,
+      gradientDirection: "45deg",
+      gradientPattern: "linear"
     };
     setTheme(defaultTheme);
   };
@@ -158,6 +186,23 @@ const ThemeCustomizer = () => {
         setTheme(prev => ({ ...prev, heroBackgroundImage: imageUrl }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Generate gradient preview based on current settings
+  const generateGradientPreview = () => {
+    const { primaryColor, secondaryColor, accentColor, gradientDirection = '45deg', gradientPattern = 'linear' } = theme;
+    
+    switch (gradientPattern) {
+      case 'radial':
+        return `radial-gradient(circle, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+      case 'conic':
+        return `conic-gradient(from ${gradientDirection}, ${primaryColor}, ${secondaryColor}, ${accentColor}, ${primaryColor})`;
+      case 'multi-stop':
+        return `linear-gradient(${gradientDirection}, ${primaryColor} 0%, ${accentColor} 50%, ${secondaryColor} 100%)`;
+      case 'linear':
+      default:
+        return `linear-gradient(${gradientDirection}, ${primaryColor}, ${secondaryColor})`;
     }
   };
 
@@ -214,17 +259,17 @@ const ThemeCustomizer = () => {
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex space-x-1">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.primaryColor }}
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: preset.primaryColor }} 
                       />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.secondaryColor }}
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: preset.secondaryColor }} 
                       />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.accentColor }}
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: preset.accentColor }} 
                       />
                     </div>
                   </div>
@@ -318,6 +363,58 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Gradient Preview */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Gradient Preview
+                </label>
+                <div 
+                  className="w-full h-16 rounded-xl border-2 border-gray-200"
+                  style={{ background: generateGradientPreview() }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Gradient Settings */}
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Gradient Settings</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gradient Pattern
+                  </label>
+                  <select
+                    value={theme.gradientPattern || 'linear'}
+                    onChange={(e) => handleHeroBackgroundChange('gradientPattern', e.target.value)}
+                    className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+                  >
+                    {gradientPatterns.map(pattern => (
+                      <option key={pattern.value} value={pattern.value}>
+                        {pattern.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gradient Direction
+                  </label>
+                  <select
+                    value={theme.gradientDirection || '45deg'}
+                    onChange={(e) => handleHeroBackgroundChange('gradientDirection', e.target.value)}
+                    className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+                  >
+                    {gradientDirections.map(direction => (
+                      <option key={direction.value} value={direction.value}>
+                        {direction.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -327,7 +424,6 @@ const ThemeCustomizer = () => {
               <SafeIcon icon={FiImage} className="mr-2" />
               Hero Background
             </h2>
-            
             {/* Background Type Selection */}
             <div className="space-y-4">
               <div>
@@ -353,7 +449,6 @@ const ThemeCustomizer = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Background Image
                   </label>
-                  
                   {/* Image Upload Options */}
                   <div className="space-y-4">
                     {/* Direct Upload */}
@@ -494,12 +589,19 @@ const ThemeCustomizer = () => {
         {/* Live Preview */}
         <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Live Preview</h2>
-          <div
+          <div 
             className="p-6 rounded-xl border-2 border-gray-200 min-h-[500px] relative overflow-hidden"
             style={{
               fontFamily: theme.fontFamily,
               ...(theme.heroBackgroundType === 'gradient' && {
-                backgroundImage: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`
+                background: generateGradientPreview()
+              }),
+              ...(theme.heroBackgroundType === 'pattern' && {
+                background: generateGradientPreview()
+              }),
+              ...(theme.heroBackgroundType === 'animated' && {
+                background: `linear-gradient(${theme.gradientDirection || '45deg'}, ${theme.primaryColor}, ${theme.secondaryColor})`,
+                animation: 'gradient-shift 3s ease-in-out infinite'
               }),
               ...(theme.heroBackgroundType === 'image' && theme.heroBackgroundImage && {
                 backgroundImage: `url(${theme.heroBackgroundImage})`,
@@ -508,31 +610,31 @@ const ThemeCustomizer = () => {
                 backgroundRepeat: 'no-repeat'
               }),
               ...(theme.heroBackgroundType === 'overlay' && theme.heroBackgroundImage && {
-                backgroundImage: `linear-gradient(rgba(${theme.primaryColor.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(',')}, ${theme.heroOverlayOpacity || 0.3}), rgba(${theme.secondaryColor.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(',')}, ${theme.heroOverlayOpacity || 0.3})), url(${theme.heroBackgroundImage})`,
+                backgroundImage: `${generateGradientPreview().replace('linear-gradient', `linear-gradient`).replace(')', `, ${theme.heroOverlayOpacity || 0.3})`), url(${theme.heroBackgroundImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
               })
             }}
-            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}-${theme.heroBackgroundType}-${theme.heroBackgroundImage}`}
+            key={`${lastSaved}-${theme.primaryColor}-${theme.secondaryColor}-${theme.heroBackgroundType}-${theme.heroBackgroundImage}-${theme.gradientDirection}-${theme.gradientPattern}`}
           >
             {/* Preview Header */}
             <div className="text-center mb-6 relative z-10">
-              <div
+              <div 
                 className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
                 style={{
-                  backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                  background: generateGradientPreview()
                 }}
               >
                 <SafeIcon icon={FiPalette} className="text-white text-xl" />
               </div>
-              <h1
+              <h1 
                 className="text-2xl font-bold mb-2"
-                style={{ color: theme.textColor }}
+                style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'white' : theme.textColor, textShadow: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none' }}
               >
                 Band Name
               </h1>
-              <p className="text-gray-600">Album Title - Preview</p>
+              <p className="text-gray-600" style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined }}>Album Title - Preview</p>
             </div>
 
             {/* Preview Buttons */}
@@ -540,7 +642,7 @@ const ThemeCustomizer = () => {
               <button
                 className="w-full py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg"
                 style={{
-                  backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                  background: generateGradientPreview()
                 }}
               >
                 Primary Button
@@ -554,14 +656,15 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Preview Content Card */}
-            <div
+            <div 
               className="p-4 rounded-xl mb-4 relative z-10"
-              style={{ backgroundColor: `${theme.primaryColor}10` }}
+              style={{ 
+                backgroundColor: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' 
+                  ? 'rgba(255,255,255,0.9)' 
+                  : `${theme.primaryColor}10` 
+              }}
             >
-              <h3
-                className="font-semibold mb-2"
-                style={{ color: theme.textColor }}
-              >
+              <h3 className="font-semibold mb-2" style={{ color: theme.textColor }}>
                 Sample Content
               </h3>
               <p style={{ color: theme.textColor }}>
@@ -573,33 +676,30 @@ const ThemeCustomizer = () => {
             {/* Preview Music Player */}
             <div className="bg-white/80 rounded-xl p-4 relative z-10">
               <div className="flex items-center space-x-4 mb-3">
-                <div
+                <div 
                   className="w-12 h-12 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: theme.primaryColor }}
                 >
                   <SafeIcon icon={FiPalette} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h4
-                    className="font-medium"
-                    style={{ color: theme.textColor }}
-                  >
+                  <h4 className="font-medium" style={{ color: theme.textColor }}>
                     Sample Song
                   </h4>
                   <p className="text-sm text-gray-600">Artist Name</p>
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                <div
+                <div 
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
-                    backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`,
+                    background: generateGradientPreview(),
                     width: '35%'
                   }}
                 />
               </div>
               <div className="flex justify-center space-x-4">
-                <button
+                <button 
                   className="p-2 rounded-full"
                   style={{
                     backgroundColor: `${theme.primaryColor}20`,
@@ -608,15 +708,15 @@ const ThemeCustomizer = () => {
                 >
                   ⏮
                 </button>
-                <button
+                <button 
                   className="p-3 rounded-full text-white"
                   style={{
-                    backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
+                    background: generateGradientPreview()
                   }}
                 >
                   ▶
                 </button>
-                <button
+                <button 
                   className="p-2 rounded-full"
                   style={{
                     backgroundColor: `${theme.primaryColor}20`,
@@ -629,12 +729,13 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Theme Info */}
-            <div className="mt-6 text-xs text-gray-500 space-y-1 relative z-10">
+            <div className="mt-6 text-xs text-gray-500 space-y-1 relative z-10" style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined }}>
               <p><strong>Primary:</strong> {theme.primaryColor}</p>
               <p><strong>Secondary:</strong> {theme.secondaryColor}</p>
               <p><strong>Accent:</strong> {theme.accentColor}</p>
               <p><strong>Font:</strong> {theme.fontFamily}</p>
               <p><strong>Background:</strong> {theme.heroBackgroundType}</p>
+              <p><strong>Gradient:</strong> {theme.gradientPattern} - {theme.gradientDirection}</p>
             </div>
           </div>
         </div>
@@ -648,6 +749,15 @@ const ThemeCustomizer = () => {
         fileTypes={['image']}
         title="Select Hero Background Image"
       />
+
+      {/* Add CSS for animated gradients */}
+      <style jsx>{`
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </motion.div>
   );
 };
