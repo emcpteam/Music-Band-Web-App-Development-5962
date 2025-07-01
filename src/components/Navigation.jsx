@@ -39,11 +39,6 @@ const Navigation = ({ onNavigate, refs }) => {
     setIsOpen(false);
   };
 
-  const handleGetStartedClick = () => {
-    setShowGetStarted(true);
-    setIsOpen(false);
-  };
-
   return (
     <>
       <motion.nav
@@ -52,11 +47,12 @@ const Navigation = ({ onNavigate, refs }) => {
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto pl-6 pr-4 sm:pr-6 lg:pr-8">
           <div className="flex justify-between items-center h-16">
-            {/* Band Name */}
+            {/* Band Name - Fixed 25px from left */}
             <motion.div
               className="flex items-center cursor-pointer"
+              style={{ marginLeft: '25px' }}
               whileHover={{ scale: 1.05 }}
               onClick={() => onNavigate(refs.heroRef)}
             >
@@ -78,19 +74,6 @@ const Navigation = ({ onNavigate, refs }) => {
                   <span className="text-sm font-medium">{item.label}</span>
                 </motion.button>
               ))}
-
-              {/* Get Started Button - Desktop */}
-              <motion.button
-                onClick={handleGetStartedClick}
-                className="flex items-center space-x-2 px-4 py-2 rounded-full text-white font-medium transition-all"
-                style={{ background: `linear-gradient(45deg, ${bandData?.theme?.primaryColor || '#8B5CF6'}, #EC4899)` }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                title="Get Started Guide"
-              >
-                <SafeIcon icon={FiStar} className="text-sm" />
-                <span className="text-sm">Get Started</span>
-              </motion.button>
 
               {/* Cart Button - Desktop */}
               <CartButton />
@@ -165,29 +148,6 @@ const Navigation = ({ onNavigate, refs }) => {
                   </motion.button>
                 ))}
 
-                {/* Get Started Button - Mobile */}
-                <motion.button
-                  onClick={handleGetStartedClick}
-                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all mt-3"
-                  style={{
-                    color: 'var(--theme-primary)',
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
-                  }}
-                  whileHover={{
-                    x: 5,
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)'
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
-                  >
-                    <SafeIcon icon={FiStar} className="text-sm" style={{ color: 'var(--theme-primary)' }} />
-                  </div>
-                  <span className="text-base font-medium">Get Started Guide</span>
-                </motion.button>
-
                 {/* Divider */}
                 <div className="my-4 border-t border-gray-200"></div>
 
@@ -259,7 +219,7 @@ const Navigation = ({ onNavigate, refs }) => {
         )}
       </AnimatePresence>
 
-      {/* GetStarted Guide Modal */}
+      {/* GetStarted Guide Modal - Kept for potential future use */}
       <GetStartedGuide
         isOpen={showGetStarted}
         onClose={() => setShowGetStarted(false)}
