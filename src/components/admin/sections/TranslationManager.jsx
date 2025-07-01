@@ -10,7 +10,7 @@ const { FiGlobe, FiSave, FiSearch, FiEdit, FiX, FiRefreshCw, FiDownload, FiUploa
 const TranslationManager = () => {
   const { data, updateTranslations } = useAdmin();
   const { ta, availableLanguages } = useLanguage();
-  const [selectedLanguage, setSelectedLanguage] = useState('it');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingKey, setEditingKey] = useState(null);
   const [translations, setTranslations] = useState(data.translations || {});
@@ -30,7 +30,6 @@ const TranslationManager = () => {
   // Get all translation keys organized by category
   const getTranslationsByCategory = () => {
     const currentTranslations = translations[selectedLanguage] || {};
-    
     const categorizedKeys = {
       navigation: ['home', 'music', 'gallery', 'podcast', 'fanWall', 'merch', 'admin'],
       music: ['musicPlayer', 'immersiveExperience', 'lyricsNotes', 'trackList', 'like', 'share', 'noSongsYet'],
@@ -42,7 +41,6 @@ const TranslationManager = () => {
     if (selectedCategory === 'all') {
       return Object.keys(currentTranslations);
     }
-
     return categorizedKeys[selectedCategory] || [];
   };
 
@@ -71,10 +69,8 @@ const TranslationManager = () => {
 
   const handleExport = () => {
     const dataStr = JSON.stringify(translations[selectedLanguage], null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const exportFileDefaultName = `translations_${selectedLanguage}.json`;
-    
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -105,39 +101,73 @@ const TranslationManager = () => {
 
   const resetToDefault = () => {
     if (window.confirm('Are you sure you want to reset all translations to default? This cannot be undone.')) {
-      // Reset to default Italian translations
-      const defaultItalianTranslations = {
-        // Navigation
-        home: 'Home',
-        music: 'Musica',
-        gallery: 'Galleria',
-        podcast: 'Podcast',
-        fanWall: 'Muro dei Fan',
-        merch: 'Merchandising',
-        admin: 'Admin',
-        // Music Player
-        musicPlayer: 'Lettore Musicale',
-        immersiveExperience: 'Immergiti nel nostro paesaggio sonoro cosmico',
-        lyricsNotes: 'Testi e Note',
-        trackList: 'Lista Tracce',
-        like: 'Mi Piace',
-        share: 'Condividi',
-        // Common
-        loading: 'Caricamento...',
-        save: 'Salva',
-        cancel: 'Annulla',
-        delete: 'Elimina',
-        edit: 'Modifica',
-        add: 'Aggiungi',
-        create: 'Crea',
-        update: 'Aggiorna',
-        close: 'Chiudi'
-      };
-      
-      setTranslations(prev => ({
-        ...prev,
-        [selectedLanguage]: defaultItalianTranslations
-      }));
+      if (selectedLanguage === 'en') {
+        // Reset to default English translations
+        const defaultEnglishTranslations = {
+          // Navigation
+          home: 'Home',
+          music: 'Music',
+          gallery: 'Gallery',
+          podcast: 'Podcast',
+          fanWall: 'Fan Wall',
+          merch: 'Merch',
+          admin: 'Admin',
+          // Music Player
+          musicPlayer: 'Music Player',
+          immersiveExperience: 'Immerse yourself in our cosmic soundscape',
+          lyricsNotes: 'Lyrics & Notes',
+          trackList: 'Track List',
+          like: 'Like',
+          share: 'Share',
+          // Common
+          loading: 'Loading...',
+          save: 'Save',
+          cancel: 'Cancel',
+          delete: 'Delete',
+          edit: 'Edit',
+          add: 'Add',
+          create: 'Create',
+          update: 'Update',
+          close: 'Close'
+        };
+        setTranslations(prev => ({
+          ...prev,
+          [selectedLanguage]: defaultEnglishTranslations
+        }));
+      } else {
+        // Reset to default Italian translations
+        const defaultItalianTranslations = {
+          // Navigation
+          home: 'Home',
+          music: 'Musica',
+          gallery: 'Galleria',
+          podcast: 'Podcast',
+          fanWall: 'Muro dei Fan',
+          merch: 'Merchandising',
+          admin: 'Admin',
+          // Music Player
+          musicPlayer: 'Lettore Musicale',
+          immersiveExperience: 'Immergiti nel nostro paesaggio sonoro cosmico',
+          lyricsNotes: 'Testi e Note',
+          trackList: 'Lista Tracce',
+          like: 'Mi Piace',
+          share: 'Condividi',
+          // Common
+          loading: 'Caricamento...',
+          save: 'Salva',
+          cancel: 'Annulla',
+          delete: 'Elimina',
+          edit: 'Modifica',
+          add: 'Aggiungi',
+          create: 'Crea',
+          update: 'Aggiorna',
+          close: 'Chiudi'
+        };
+        setTranslations(prev => ({
+          ...prev,
+          [selectedLanguage]: defaultItalianTranslations
+        }));
+      }
     }
   };
 
@@ -160,7 +190,6 @@ const TranslationManager = () => {
             <SafeIcon icon={FiDownload} className="text-sm" />
             <span>Export</span>
           </motion.button>
-          
           <div className="relative">
             <input
               type="file"
@@ -201,7 +230,7 @@ const TranslationManager = () => {
               >
                 <span className="text-xl">{lang.flag}</span>
                 <span className="font-medium">{lang.name}</span>
-                {selectedLanguage === lang.code && lang.code !== 'en' && (
+                {selectedLanguage === lang.code && (
                   <span className="ml-auto text-xs bg-white/20 px-2 py-1 rounded-full">
                     Editable
                   </span>
@@ -250,7 +279,7 @@ const TranslationManager = () => {
           <div className="text-sm text-gray-600">
             Editing: <span className="font-medium">{availableLanguages.find(l => l.code === selectedLanguage)?.name}</span>
             {selectedLanguage === 'en' && (
-              <span className="ml-2 text-orange-600">(Read-only - English is the base language)</span>
+              <span className="ml-2 text-green-600">(Base language - fully editable)</span>
             )}
           </div>
           <div className="flex items-center space-x-4">
@@ -265,7 +294,7 @@ const TranslationManager = () => {
             </motion.button>
             <motion.button
               onClick={handleSave}
-              disabled={isSaving || selectedLanguage === 'en'}
+              disabled={isSaving}
               className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -282,7 +311,7 @@ const TranslationManager = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-6">
           Translations ({filteredKeys.length} items)
         </h3>
-        
+
         {filteredKeys.length > 0 ? (
           <div className="space-y-4">
             {filteredKeys.map(key => (
@@ -306,21 +335,18 @@ const TranslationManager = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     {editingKey === key ? (
-                      <>
-                        <motion.button
-                          onClick={() => setEditingKey(null)}
-                          className="p-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <SafeIcon icon={FiX} className="text-sm" />
-                        </motion.button>
-                      </>
+                      <motion.button
+                        onClick={() => setEditingKey(null)}
+                        className="p-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <SafeIcon icon={FiX} className="text-sm" />
+                      </motion.button>
                     ) : (
                       <motion.button
                         onClick={() => setEditingKey(key)}
-                        disabled={selectedLanguage === 'en'}
-                        className="p-2 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200 transition-colors disabled:opacity-50"
+                        className="p-2 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200 transition-colors"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -329,7 +355,7 @@ const TranslationManager = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {editingKey === key ? (
                   <textarea
                     value={translations[selectedLanguage]?.[key] || ''}
@@ -385,8 +411,9 @@ const TranslationManager = () => {
           Translation Guidelines
         </h3>
         <div className="text-sm text-gray-600 space-y-2">
+          <p>• <strong>English is the base language:</strong> All languages can be fully customized</p>
           <p>• <strong>Keep context:</strong> Consider where the text appears in the interface</p>
-          <p>• <strong>Maintain tone:</strong> Keep the same friendly, engaging tone as English</p>
+          <p>• <strong>Maintain tone:</strong> Keep the same friendly, engaging tone across languages</p>
           <p>• <strong>Check length:</strong> Ensure translations fit well in the UI layout</p>
           <p>• <strong>Use variables:</strong> Preserve any {`{variables}`} exactly as they appear</p>
           <p>• <strong>Test thoroughly:</strong> Preview changes on the live site after saving</p>
