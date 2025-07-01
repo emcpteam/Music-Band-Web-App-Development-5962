@@ -10,17 +10,13 @@ import LanguageSelector from '../common/LanguageSelector';
 const { FiLock, FiUser, FiEye, FiEyeOff, FiArrowLeft, FiRefreshCw } = FiIcons;
 
 const AdminLogin = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetUsername, setResetUsername] = useState('');
   const [resetMessage, setResetMessage] = useState('');
-
   const { login, resetPassword } = useAdmin();
   const { ta } = useLanguage();
   const navigate = useNavigate();
@@ -34,13 +30,11 @@ const AdminLogin = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const result = login(formData.username, formData.password);
-    
     if (result.success) {
       navigate('/admin/dashboard');
     } else {
       setError('Invalid username or password');
     }
-    
     setLoading(false);
   };
 
@@ -52,7 +46,6 @@ const AdminLogin = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const result = resetPassword(resetUsername);
-    
     if (result.success) {
       setResetMessage(result.message);
       setShowReset(false);
@@ -62,7 +55,6 @@ const AdminLogin = () => {
     } else {
       setResetMessage('Username not found');
     }
-    
     setLoading(false);
   };
 
@@ -77,7 +69,7 @@ const AdminLogin = () => {
           <div className="flex justify-between items-center mb-6">
             <LanguageSelector />
           </div>
-          
+
           <motion.div
             className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -233,14 +225,6 @@ const AdminLogin = () => {
               {loading ? ta('loading') : 'Login to Dashboard'}
             </motion.button>
           </form>
-
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl">
-            <p className="text-sm text-blue-600">
-              <strong>Demo credentials:</strong><br />
-              Username: admin<br />
-              Password: admin123
-            </p>
-          </div>
         </motion.div>
       </div>
     </div>
