@@ -1,35 +1,191 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import { useBandData } from '../contexts/AdminContext';
 
-const { FiPlay, FiPause, FiClock, FiCalendar, FiMic } = FiIcons;
+const { FiPlay, FiPause, FiClock, FiCalendar, FiMic, FiVolumeX, FiVolume2 } = FiIcons;
 
 const PodcastDiary = () => {
   const [currentEpisode, setCurrentEpisode] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.7);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const audioRef = useRef(null);
+  const progressBarRef = useRef(null);
   const bandData = useBandData();
 
   const episodes = bandData.podcasts.filter(podcast => podcast.isActive);
+
+  // Audio event listeners
+  useEffect(() => {
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      
+      // Set initial volume
+      audio.volume = volume;
+
+      const handleTimeUpdate = () => {
+        if (!isDragging) {
+          setCurrentTime(audio.currentTime);
+        }
+      };
+
+      const handleLoadedMetadata = () => {
+        setDuration(audio.duration || 0);
+        setIsLoading(false);
+      };
+
+      const handleCanPlay = () => {
+        setIsLoading(false);
+      };
+
+      const handleLoadStart = () => {
+        setIsLoading(true);
+      };
+
+      const handleEnded = () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      };
+
+      const handleError = (e) => {
+        console.error('Audio error:', e);
+        setIsLoading(false);
+        setIsPlaying(false);
+      };
+
+      const handlePlay = () => {
+        setIsPlaying(true);
+      };
+
+      const handlePause = () => {
+        setIsPlaying(false);
+      };
+
+      // Add event listeners
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('loadstart', handleLoadStart);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('error', handleError);
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+
+      return () => {
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('loadstart', handleLoadStart);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
+      };
+    }
+  }, [audioRef, isDragging, volume]);
+
+  // Update audio source when episode changes
+  useEffect(() => {
+    if (audioRef.current && currentEpisode?.audioUrl) {
+      const audio = audioRef.current;
+      
+      // Reset state
+      setCurrentTime(0);
+      setDuration(0);
+      setIsLoading(true);
+      
+      // Set new source
+      audio.src = currentEpisode.audioUrl;
+      audio.load();
+      
+      // Auto-play if was playing
+      if (isPlaying) {
+        audio.play().catch(error => {
+          console.error('Auto-play failed:', error);
+          setIsPlaying(false);
+        });
+      }
+    }
+  }, [currentEpisode?.audioUrl]);
+
+  // Update volume when volume state changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const handlePlayPause = (episode) => {
     if (currentEpisode?.id === episode.id) {
       if (isPlaying) {
         audioRef.current?.pause();
-        setIsPlaying(false);
       } else {
-        audioRef.current?.play();
-        setIsPlaying(true);
+        audioRef.current?.play().catch(error => {
+          console.error('Play failed:', error);
+          setIsPlaying(false);
+        });
       }
     } else {
       setCurrentEpisode(episode);
       setIsPlaying(true);
-      // In a real app, you'd load the new audio source here
+      setCurrentTime(0);
     }
   };
+
+  // Progress bar interaction
+  const handleProgressClick = (e) => {
+    if (audioRef.current && progressBarRef.current && duration > 0) {
+      const progressBar = progressBarRef.current;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const newTime = (clickX / rect.width) * duration;
+      
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleProgressMouseDown = (e) => {
+    setIsDragging(true);
+    handleProgressClick(e);
+  };
+
+  const handleProgressMouseMove = (e) => {
+    if (isDragging && audioRef.current && progressBarRef.current && duration > 0) {
+      const progressBar = progressBarRef.current;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const newTime = (clickX / rect.width) * duration;
+      
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleProgressMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add global mouse events for dragging
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e) => handleProgressMouseMove(e);
+      const handleMouseUp = () => handleProgressMouseUp();
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, duration]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -41,10 +197,24 @@ const PodcastDiary = () => {
   };
 
   const formatTime = (time) => {
+    if (isNaN(time) || time === 0) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (volume > 0) {
+        setVolume(0);
+      } else {
+        setVolume(0.7);
+      }
+    }
+  };
+
+  // Calculate progress percentage
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const handleSpotifySubscribe = () => {
     const spotifyUrl = bandData.band.socialLinks?.spotify || 'https://open.spotify.com/';
@@ -52,7 +222,6 @@ const PodcastDiary = () => {
   };
 
   const handleAppleSubscribe = () => {
-    // Generate Apple Podcasts URL based on band name
     const bandName = encodeURIComponent(bandData.band.name);
     const appleUrl = `https://podcasts.apple.com/search?term=${bandName}`;
     window.open(appleUrl, '_blank', 'noopener,noreferrer');
@@ -90,10 +259,16 @@ const PodcastDiary = () => {
           >
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
               <div className="flex-shrink-0">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-400 rounded-2xl flex items-center justify-center">
+                <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-400 rounded-2xl flex items-center justify-center relative">
                   <SafeIcon icon={FiMic} className="text-white text-2xl" />
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                 </div>
               </div>
+              
               <div className="flex-1 min-w-0">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
                   {currentEpisode.title}
@@ -101,32 +276,84 @@ const PodcastDiary = () => {
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                   {currentEpisode.description}
                 </p>
-                {/* Progress Bar */}
+                
+                {/* Enhanced Progress Bar */}
                 <div className="mb-4">
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>{formatTime(currentTime)}</span>
-                    <span>{currentEpisode.duration}</span>
+                    <span>{formatTime(duration)}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-300"
-                      style={{ width: '25%' }}
-                    ></div>
+                  <div
+                    ref={progressBarRef}
+                    className="w-full h-3 bg-gray-200 rounded-full cursor-pointer relative group"
+                    onClick={handleProgressClick}
+                    onMouseDown={handleProgressMouseDown}
+                  >
+                    <div
+                      className="h-3 bg-gradient-to-r from-green-400 to-blue-400 rounded-full transition-all duration-150"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                    {/* Drag handle */}
+                    <div
+                      className="absolute top-1/2 transform -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ left: `calc(${progressPercentage}% - 10px)` }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        handleProgressMouseDown(e);
+                      }}
+                    />
                   </div>
                 </div>
+                
+                {/* Volume Control */}
+                <div className="flex items-center space-x-3 mb-4">
+                  <button
+                    onClick={toggleMute}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <SafeIcon
+                      icon={volume === 0 ? FiVolumeX : FiVolume2}
+                      className="text-gray-600"
+                    />
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer max-w-24"
+                  />
+                  <span className="text-xs text-gray-600 w-8">
+                    {Math.round(volume * 100)}
+                  </span>
+                </div>
               </div>
+              
               <div className="flex items-center space-x-4">
                 <motion.button
                   onClick={() => handlePlayPause(currentEpisode)}
-                  className="p-4 bg-gradient-to-r from-green-400 to-blue-400 rounded-full text-white shadow-lg hover:shadow-xl transition-all"
+                  disabled={isLoading}
+                  className="p-4 bg-gradient-to-r from-green-400 to-blue-400 rounded-full text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="text-xl" />
+                  {isLoading ? (
+                    <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="text-xl" />
+                  )}
                 </motion.button>
               </div>
             </div>
-            <audio ref={audioRef} src={currentEpisode.audioUrl} />
+            
+            {/* Hidden Audio Element */}
+            <audio
+              ref={audioRef}
+              preload="metadata"
+              crossOrigin="anonymous"
+            />
           </motion.div>
         )}
 
@@ -149,9 +376,9 @@ const PodcastDiary = () => {
                   <div className="flex-shrink-0">
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-xl flex items-center justify-center">
-                        <SafeIcon 
-                          icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay} 
-                          className="text-white text-xl" 
+                        <SafeIcon
+                          icon={currentEpisode?.id === episode.id && isPlaying ? FiPause : FiPlay}
+                          className="text-white text-xl"
                         />
                       </div>
                       {episode.isNew && (
@@ -161,6 +388,7 @@ const PodcastDiary = () => {
                       )}
                     </div>
                   </div>
+                  
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-2">
                       <h3 className="text-xl font-semibold text-gray-800">{episode.title}</h3>
@@ -184,6 +412,7 @@ const PodcastDiary = () => {
                       </div>
                     </div>
                   </div>
+                  
                   <div className="flex-shrink-0">
                     <motion.button
                       className="px-6 py-3 bg-gradient-to-r from-green-400 to-blue-400 text-white rounded-full font-medium hover:shadow-lg transition-all"

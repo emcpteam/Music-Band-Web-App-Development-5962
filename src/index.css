@@ -42,6 +42,12 @@ body {
   min-height: 100vh;
 }
 
+/* Quest SDK CSS Override - Remove width: fit-content from like/dislike text */
+.q-fd-like-dislike-txt > h4,
+.q-fd-like-dislike-txt > p {
+  width: auto !important;
+}
+
 /* Advanced Theme-aware utility classes */
 .theme-primary {
   color: var(--theme-primary);
@@ -155,14 +161,24 @@ body {
 
 /* Advanced gradient animations */
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes gradient-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .theme-gradient-animated {
@@ -288,7 +304,7 @@ body {
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(var(--theme-primary-rgb), 0.2);
   }
-
+  
   .theme-nav {
     background: rgba(0, 0, 0, 0.8);
     border-bottom: 1px solid rgba(var(--theme-primary-rgb), 0.2);
