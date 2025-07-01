@@ -9,14 +9,15 @@ import {useAuth} from '../contexts/AuthContext';
 import LanguageSelector from './common/LanguageSelector';
 import CartButton from './cart/CartButton';
 
-const {FiMenu,FiX,FiMusic,FiImage,FiMic,FiMessageCircle,FiShoppingBag,FiHome,FiShield,FiGlobe,FiUser,FiLogIn} = FiIcons;
+const {FiMenu,FiX,FiMusic,FiImage,FiMic,FiMessageCircle,FiShoppingBag,FiHome,FiShield,FiGlobe,FiUser,FiLogIn,FiLogOut} = FiIcons;
 
 const Navigation = ({onNavigate,refs}) => {
   const [isOpen,setIsOpen] = useState(false);
+  const [showProfileMenu,setShowProfileMenu] = useState(false);
   const navigate = useNavigate();
   const bandData = useBandData();
   const {t} = useLanguage();
-  const {isAuthenticated,user} = useAuth();
+  const {isAuthenticated,user,logout} = useAuth();
 
   const navItems = [
     {icon: FiHome,label: t('home'),ref: refs.heroRef},
@@ -30,17 +31,21 @@ const Navigation = ({onNavigate,refs}) => {
   const handleAdminAccess = () => {
     navigate('/admin');
     setIsOpen(false);
+    setShowProfileMenu(false);
   };
 
   const handleAuthAction = () => {
     if (isAuthenticated) {
-      // User is logged in, could show profile or logout options
-      // For now, just navigate to profile/settings
-      navigate('/login');
+      setShowProfileMenu(!showProfileMenu);
     } else {
-      // User not logged in, go to login
       navigate('/login');
+      setIsOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowProfileMenu(false);
     setIsOpen(false);
   };
 
@@ -69,7 +74,7 @@ const Navigation = ({onNavigate,refs}) => {
             </motion.div>
 
             {/* Desktop Navigation - Hidden on tablet and mobile */}
-            <div className="hidden xl:flex items-center space-x-8">
+            <div className="hidden xl:flex items-center space-x-6">
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.label}
@@ -90,20 +95,49 @@ const Navigation = ({onNavigate,refs}) => {
               {/* Language Selector - Desktop */}
               <LanguageSelector />
 
-              {/* Auth Button - Desktop */}
-              <motion.button
-                onClick={handleAuthAction}
-                className="flex items-center space-x-2 text-gray-600 hover:text-current transition-colors"
-                style={{'--hover-color': 'var(--theme-primary)'}}
-                whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
-                whileTap={{ scale: 0.95 }}
-                title={isAuthenticated ? 'Profile' : 'Sign In'}
-              >
-                <SafeIcon icon={isAuthenticated ? FiUser : FiLogIn} className="text-sm" />
-                <span className="text-sm font-medium">
-                  {isAuthenticated ? 'Profile' : 'Sign In'}
-                </span>
-              </motion.button>
+              {/* Auth Button with Dropdown - Desktop */}
+              <div className="relative">
+                <motion.button
+                  onClick={handleAuthAction}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-current transition-colors"
+                  style={{'--hover-color': 'var(--theme-primary)'}}
+                  whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
+                  whileTap={{ scale: 0.95 }}
+                  title={isAuthenticated ? 'Profile Menu' : 'Sign In'}
+                >
+                  <SafeIcon icon={isAuthenticated ? FiUser : FiLogIn} className="text-sm" />
+                  <span className="text-sm font-medium">
+                    {isAuthenticated ? 'Profile' : 'Sign In'}
+                  </span>
+                </motion.button>
+
+                {/* Profile Dropdown - Desktop */}
+                <AnimatePresence>
+                  {isAuthenticated && showProfileMenu && (
+                    <motion.div
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="p-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-800">Signed in as</p>
+                        <p className="text-xs text-gray-600 truncate">{user?.email || user?.userId}</p>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center space-x-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <SafeIcon icon={FiLogOut} className="text-sm" />
+                          <span className="text-sm">Sign Out</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Admin Access - Desktop */}
               <motion.button
@@ -189,36 +223,69 @@ const Navigation = ({onNavigate,refs}) => {
                   </div>
                 </div>
 
-                {/* Auth Button - Mobile/Tablet */}
-                <motion.button
-                  onClick={handleAuthAction}
-                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all border-t border-gray-200 mt-4 pt-4"
-                  style={{
-                    color: 'var(--theme-primary)',
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
-                  }}
-                  whileHover={{ x: 5, backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)' }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
-                  >
-                    <SafeIcon 
-                      icon={isAuthenticated ? FiUser : FiLogIn} 
-                      className="text-sm" 
-                      style={{ color: 'var(--theme-primary)' }}
-                    />
-                  </div>
-                  <span className="text-base font-medium">
-                    {isAuthenticated ? 'Profile' : 'Sign In'}
-                  </span>
-                </motion.button>
+                {/* Auth Section - Mobile/Tablet */}
+                <div className="border-t border-gray-200 pt-4">
+                  {isAuthenticated ? (
+                    <>
+                      {/* User Info */}
+                      <div className="px-4 py-3 bg-gray-50 rounded-xl mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                            <SafeIcon icon={FiUser} className="text-white text-sm" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">Signed in</p>
+                            <p className="text-xs text-gray-600 truncate">{user?.email || user?.userId}</p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Logout Button */}
+                      <motion.button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-4 w-full px-4 py-3 text-red-600 rounded-xl transition-all hover:bg-red-50"
+                        whileHover={{ x: 5 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                          <SafeIcon icon={FiLogOut} className="text-sm text-red-600" />
+                        </div>
+                        <span className="text-base font-medium">Sign Out</span>
+                      </motion.button>
+                    </>
+                  ) : (
+                    /* Login Button */
+                    <motion.button
+                      onClick={() => {
+                        navigate('/login');
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all"
+                      style={{
+                        color: 'var(--theme-primary)',
+                        backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
+                      }}
+                      whileHover={{ x: 5, backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)' }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
+                      >
+                        <SafeIcon 
+                          icon={FiLogIn} 
+                          className="text-sm" 
+                          style={{ color: 'var(--theme-primary)' }}
+                        />
+                      </div>
+                      <span className="text-base font-medium">Sign In</span>
+                    </motion.button>
+                  )}
+                </div>
 
                 {/* Admin Access - Mobile/Tablet */}
                 <motion.button
                   onClick={handleAdminAccess}
-                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all"
+                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all mt-3"
                   style={{
                     color: 'var(--theme-primary)',
                     backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
@@ -242,7 +309,7 @@ const Navigation = ({onNavigate,refs}) => {
                 {/* Close Menu Button */}
                 <motion.button
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center w-full px-4 py-3 mt-4 text-gray-600 bg-gray-100 rounded-xl transition-colors hover:bg-gray-200"
+                  className="flex items-center justify-center w-full px-4 py-3 mt-6 text-gray-600 bg-gray-100 rounded-xl transition-colors hover:bg-gray-200"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -270,6 +337,14 @@ const Navigation = ({onNavigate,refs}) => {
           />
         )}
       </AnimatePresence>
+
+      {/* Desktop Profile Menu Backdrop */}
+      {showProfileMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowProfileMenu(false)} 
+        />
+      )}
     </>
   );
 };

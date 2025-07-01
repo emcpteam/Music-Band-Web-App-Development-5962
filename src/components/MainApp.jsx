@@ -11,6 +11,7 @@ import Merchandising from './Merchandising';
 import Footer from './Footer';
 import Navigation from './Navigation';
 import TrackingCodes from './TrackingCodes';
+import MetaTags from './MetaTags';
 
 const MainApp = () => {
   const [currentTrack,setCurrentTrack] = useState(0);
@@ -51,6 +52,9 @@ const MainApp = () => {
       className="min-h-screen bg-gradient-pastel font-poppins"
       key={themeUpdateTrigger} // Force re-render when theme changes
     >
+      {/* SEO Meta Tags */}
+      <MetaTags />
+      
       {/* Analytics & Tracking Codes */}
       <TrackingCodes />
       

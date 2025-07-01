@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React,{createContext,useContext,useState,useEffect} from 'react';
 
 const AdminContext = createContext();
 
@@ -27,7 +27,20 @@ const initialData = {
       metaPixelCode: "",
       googleTagManagerCode: ""
     },
-    // New footer customization options
+    // SEO & Meta Tags configuration
+    seo: {
+      title: "Stellar Waves - Official Website",
+      description: "Experience Stellar Waves' cosmic soundscapes. Listen to our latest albums, explore multimedia content, and join our stellar community.",
+      keywords: "Stellar Waves, music, electronic, ambient, cosmic, soundscape, album",
+      ogImage: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=630&fit=crop&crop=center",
+      twitterCard: "summary_large_image",
+      canonicalUrl: "",
+      robots: "index, follow",
+      author: "Stellar Waves",
+      language: "en",
+      structuredData: true
+    },
+    // Footer customization options
     footer: {
       copyrightText: "© 2024 Stellar Waves. All rights reserved.",
       customText: "",
@@ -67,7 +80,7 @@ const initialData = {
     heroOverlayOpacity: 0.3,
     gradientDirection: "45deg",
     gradientPattern: "linear",
-    // New hero title customization
+    // Hero title customization
     heroTitleColor: "#FFFFFF",
     heroTitleStyle: "gradient", // 'solid', 'gradient', 'auto'
     heroTitleShadow: true
@@ -336,13 +349,17 @@ export const AdminProvider = ({ children }) => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        // Ensure new theme properties exist
+        // Ensure new properties exist
         const mergedData = {
           ...initialData,
           ...parsedData,
           band: {
             ...initialData.band,
             ...parsedData.band,
+            seo: {
+              ...initialData.band.seo,
+              ...parsedData.band?.seo
+            },
             footer: {
               ...initialData.band.footer,
               ...parsedData.band?.footer
@@ -380,7 +397,7 @@ export const AdminProvider = ({ children }) => {
   useEffect(() => {
     if (data.theme) {
       const root = document.documentElement;
-      
+
       // Set CSS custom properties
       root.style.setProperty('--theme-primary', data.theme.primaryColor);
       root.style.setProperty('--theme-secondary', data.theme.secondaryColor);
@@ -388,17 +405,17 @@ export const AdminProvider = ({ children }) => {
       root.style.setProperty('--theme-background', data.theme.backgroundColor);
       root.style.setProperty('--theme-text', data.theme.textColor);
       root.style.setProperty('--theme-font-family', data.theme.fontFamily);
-      
+
       // Hero background settings
       root.style.setProperty('--theme-hero-bg-image', data.theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', data.theme.heroBackgroundType || 'gradient');
       root.style.setProperty('--theme-hero-overlay-opacity', (data.theme.heroOverlayOpacity || 0.3));
-      
+
       // Hero title settings
       root.style.setProperty('--theme-hero-title-color', data.theme.heroTitleColor || '#FFFFFF');
       root.style.setProperty('--theme-hero-title-style', data.theme.heroTitleStyle || 'gradient');
       root.style.setProperty('--theme-hero-title-shadow', data.theme.heroTitleShadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none');
-      
+
       // Advanced gradient settings
       root.style.setProperty('--theme-gradient-direction', data.theme.gradientDirection || '45deg');
       root.style.setProperty('--theme-gradient-pattern', data.theme.gradientPattern || 'linear');
@@ -462,6 +479,17 @@ export const AdminProvider = ({ children }) => {
       band: {
         ...prev.band,
         footer: { ...prev.band.footer, ...footerUpdates }
+      }
+    }));
+  };
+
+  // New function to update SEO settings
+  const updateSeoSettings = (seoUpdates) => {
+    setData(prev => ({
+      ...prev,
+      band: {
+        ...prev.band,
+        seo: { ...prev.band.seo, ...seoUpdates }
       }
     }));
   };
@@ -758,17 +786,14 @@ export const AdminProvider = ({ children }) => {
       if (currentPassword !== data.adminCredentials.password) {
         return { success: false, error: 'Current password is incorrect' };
       }
-      
+
       if (newPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
 
       setData(prev => ({
         ...prev,
-        adminCredentials: {
-          ...prev.adminCredentials,
-          password: newPassword
-        }
+        adminCredentials: { ...prev.adminCredentials, password: newPassword }
       }));
 
       return { success: true };
@@ -802,13 +827,9 @@ export const AdminProvider = ({ children }) => {
       }
 
       const tempPassword = Math.random().toString(36).substring(2, 10);
-      
       setData(prev => ({
         ...prev,
-        adminCredentials: {
-          ...prev.adminCredentials,
-          password: tempPassword
-        }
+        adminCredentials: { ...prev.adminCredentials, password: tempPassword }
       }));
 
       return {
@@ -828,7 +849,8 @@ export const AdminProvider = ({ children }) => {
     login,
     logout,
     updateBandInfo,
-    updateFooterSettings, // New function for footer management
+    updateFooterSettings, // Footer management
+    updateSeoSettings, // SEO management
     updateTheme,
     updateSystemConfiguration,
     updateTranslations,
