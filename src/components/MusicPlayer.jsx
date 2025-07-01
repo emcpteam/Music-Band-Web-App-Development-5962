@@ -12,6 +12,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
   const [showLyrics, setShowLyrics] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [likedSongs, setLikedSongs] = useState(() => {
     // Load liked songs from localStorage
     try {
@@ -24,9 +26,10 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   
+  const progressBarRef = useRef(null);
   const bandData = useBandData();
   const { t } = useLanguage();
-  
+
   const tracks = bandData.songs.filter(song => song.isActive);
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
   const currentSong = tracks[currentTrack];
@@ -40,6 +43,110 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
     }
   }, [likedSongs]);
 
+  // Audio event listeners and sync
+  useEffect(() => {
+    if (audioRef.current) {
+      const audio = audioRef.current;
+
+      // Set initial volume
+      audio.volume = volume;
+
+      // Update current time
+      const handleTimeUpdate = () => {
+        if (!isDragging) {
+          setCurrentTime(audio.currentTime);
+        }
+      };
+
+      // Update duration when metadata loads
+      const handleLoadedMetadata = () => {
+        setDuration(audio.duration || 0);
+        setIsLoading(false);
+      };
+
+      // Handle when audio can start playing
+      const handleCanPlay = () => {
+        setIsLoading(false);
+      };
+
+      // Handle loading start
+      const handleLoadStart = () => {
+        setIsLoading(true);
+      };
+
+      // Handle audio end
+      const handleEnded = () => {
+        setIsPlaying(false);
+        // Auto-play next track
+        handleNext();
+      };
+
+      // Handle audio errors
+      const handleError = (e) => {
+        console.error('Audio error:', e);
+        setIsLoading(false);
+        setIsPlaying(false);
+      };
+
+      // Handle when audio starts playing
+      const handlePlay = () => {
+        setIsPlaying(true);
+      };
+
+      // Handle when audio pauses
+      const handlePause = () => {
+        setIsPlaying(false);
+      };
+
+      // Add event listeners
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('loadstart', handleLoadStart);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('error', handleError);
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+
+      // Cleanup
+      return () => {
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('loadstart', handleLoadStart);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
+      };
+    }
+  }, [audioRef, isDragging, volume]);
+
+  // Update audio source when track changes
+  useEffect(() => {
+    if (audioRef.current && currentSong?.audioUrl) {
+      const audio = audioRef.current;
+      
+      // Reset state
+      setCurrentTime(0);
+      setDuration(0);
+      setIsLoading(true);
+      
+      // Set new source
+      audio.src = currentSong.audioUrl;
+      audio.load();
+      
+      // Auto-play if was playing
+      if (isPlaying) {
+        audio.play().catch(error => {
+          console.error('Auto-play failed:', error);
+          setIsPlaying(false);
+        });
+      }
+    }
+  }, [currentTrack, currentSong?.audioUrl]);
+
+  // Update volume when volume state changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -47,30 +154,87 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   }, [volume]);
 
   const handlePlayPause = () => {
-    if (audioRef.current) {
+    if (audioRef.current && currentSong?.audioUrl) {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(error => {
+          console.error('Play failed:', error);
+          setIsPlaying(false);
+        });
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
   const handleTrackSelect = (index) => {
-    setCurrentTrack(index);
-    setIsPlaying(false);
+    if (index !== currentTrack) {
+      setCurrentTrack(index);
+      setIsPlaying(false); // Will be handled by useEffect
+    }
   };
 
   const handlePrevious = () => {
-    setCurrentTrack(currentTrack > 0 ? currentTrack - 1 : tracks.length - 1);
+    const newTrack = currentTrack > 0 ? currentTrack - 1 : tracks.length - 1;
+    setCurrentTrack(newTrack);
   };
 
   const handleNext = () => {
-    setCurrentTrack(currentTrack < tracks.length - 1 ? currentTrack + 1 : 0);
+    const newTrack = currentTrack < tracks.length - 1 ? currentTrack + 1 : 0;
+    setCurrentTrack(newTrack);
   };
 
+  // Progress bar interaction
+  const handleProgressClick = (e) => {
+    if (audioRef.current && progressBarRef.current && duration > 0) {
+      const progressBar = progressBarRef.current;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const newTime = (clickX / rect.width) * duration;
+      
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleProgressMouseDown = (e) => {
+    setIsDragging(true);
+    handleProgressClick(e);
+  };
+
+  const handleProgressMouseMove = (e) => {
+    if (isDragging && audioRef.current && progressBarRef.current && duration > 0) {
+      const progressBar = progressBarRef.current;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const newTime = (clickX / rect.width) * duration;
+      
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleProgressMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add global mouse events for dragging
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e) => handleProgressMouseMove(e);
+      const handleMouseUp = () => handleProgressMouseUp();
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, duration]);
+
   const formatTime = (time) => {
+    if (isNaN(time) || time === 0) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -80,6 +244,9 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
     const album = bandData.albums.find(a => a.id === albumId);
     return album ? album.title : bandData.band.name;
   };
+
+  // Calculate progress percentage
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   // Handle Like Button
   const handleLike = () => {
@@ -91,13 +258,11 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
     if (isCurrentlyLiked) {
       // Remove from liked songs
       setLikedSongs(prev => prev.filter(id => id !== songId));
-      
       // Show feedback
       setShareMessage(`Removed "${currentSong.title}" from your favorites`);
     } else {
       // Add to liked songs
       setLikedSongs(prev => [...prev, songId]);
-      
       // Show feedback
       setShareMessage(`Added "${currentSong.title}" to your favorites! ❤️`);
     }
@@ -152,7 +317,6 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
 
   const copyToClipboard = async () => {
     const shareText = `🎵 Check out "${currentSong.title}" by ${bandData.band.name}! ${window.location.href}`;
-    
     try {
       await navigator.clipboard.writeText(shareText);
       setShareMessage('Link copied to clipboard! 📋');
@@ -166,7 +330,6 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
       document.body.removeChild(textArea);
       setShareMessage('Link copied to clipboard! 📋');
     }
-    
     setShowShareMenu(false);
     setTimeout(() => setShareMessage(''), 3000);
   };
@@ -236,6 +399,12 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                   className="w-full h-full rounded-2xl object-cover shadow-lg"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+                {/* Loading indicator */}
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
               <h3 className="text-2xl font-semibold theme-text mb-2">
                 {tracks[currentTrack]?.title}
@@ -250,6 +419,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                disabled={isLoading}
               >
                 <SafeIcon icon={FiSkipBack} className="text-xl text-gray-700" />
               </motion.button>
@@ -259,8 +429,13 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 className="p-4 rounded-full text-white shadow-lg hover:shadow-xl transition-all btn-primary"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                disabled={isLoading || !currentSong?.audioUrl}
               >
-                <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="text-2xl" />
+                {isLoading ? (
+                  <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <SafeIcon icon={isPlaying ? FiPause : FiPlay} className="text-2xl" />
+                )}
               </motion.button>
 
               <motion.button
@@ -268,6 +443,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                disabled={isLoading}
               >
                 <SafeIcon icon={FiSkipForward} className="text-xl text-gray-700" />
               </motion.button>
@@ -277,10 +453,27 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
             <div className="mb-6">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <span>{formatTime(currentTime)}</span>
-                <span>{tracks[currentTrack]?.duration}</span>
+                <span>{formatTime(duration)}</span>
               </div>
-              <div className="theme-progress-bg">
-                <div className="theme-progress" style={{ width: '35%' }} />
+              <div 
+                ref={progressBarRef}
+                className="w-full h-2 bg-gray-200 rounded-full cursor-pointer relative"
+                onClick={handleProgressClick}
+                onMouseDown={handleProgressMouseDown}
+              >
+                <div 
+                  className="h-2 rounded-full transition-all duration-150 theme-gradient"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+                {/* Drag handle */}
+                <div 
+                  className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md cursor-grab active:cursor-grabbing"
+                  style={{ left: `calc(${progressPercentage}% - 8px)` }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    handleProgressMouseDown(e);
+                  }}
+                />
               </div>
             </div>
 
@@ -293,9 +486,10 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 max="1"
                 step="0.1"
                 value={volume}
-                onChange={(e) => setVolume(e.target.value)}
+                onChange={(e) => setVolume(parseFloat(e.target.value))}
                 className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               />
+              <span className="text-sm text-gray-600 w-8">{Math.round(volume * 100)}</span>
             </div>
 
             {/* Action Buttons */}
@@ -310,10 +504,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <SafeIcon 
-                  icon={FiHeart} 
-                  className={`text-sm ${isLiked ? 'fill-current' : ''}`} 
-                />
+                <SafeIcon icon={FiHeart} className={`text-sm ${isLiked ? 'fill-current' : ''}`} />
                 <span className="text-sm">{isLiked ? 'Liked' : t('like')}</span>
               </motion.button>
 
@@ -366,7 +557,11 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
             </div>
 
             {/* Hidden Audio Element */}
-            <audio ref={audioRef} src={tracks[currentTrack]?.audioUrl} />
+            <audio 
+              ref={audioRef} 
+              preload="metadata"
+              crossOrigin="anonymous"
+            />
           </motion.div>
 
           {/* Lyrics & Track List */}
@@ -381,8 +576,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(true)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  showLyrics
-                    ? 'text-white shadow-lg btn-primary'
+                  showLyrics 
+                    ? 'text-white shadow-lg btn-primary' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -391,8 +586,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(false)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  !showLyrics
-                    ? 'text-white shadow-lg btn-primary'
+                  !showLyrics 
+                    ? 'text-white shadow-lg btn-primary' 
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -456,8 +651,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                       >
                         <div className="flex items-center space-x-4">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            currentTrack === index
-                              ? 'bg-white/20 text-white'
+                            currentTrack === index 
+                              ? 'bg-white/20 text-white' 
                               : 'bg-gray-200 text-gray-600'
                           }`}>
                             {currentTrack === index && isPlaying ? (
@@ -508,7 +703,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
       {showShareMenu && (
         <div 
           className="fixed inset-0 z-10" 
-          onClick={() => setShowShareMenu(false)}
+          onClick={() => setShowShareMenu(false)} 
         />
       )}
     </div>
