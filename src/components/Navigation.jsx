@@ -20,14 +20,52 @@ const Navigation = ({ onNavigate, refs }) => {
   const { t } = useLanguage();
   const { isAuthenticated, user, logout } = useAuth();
 
+  // Get sections configuration
+  const sections = bandData.band.sections || {};
+
+  // Build navigation items based on sections configuration
   const navItems = [
-    { icon: FiHome, label: t('home'), ref: refs.heroRef },
-    { icon: FiMusic, label: t('music'), ref: refs.musicRef },
-    { icon: FiImage, label: t('gallery'), ref: refs.bookletRef },
-    { icon: FiMic, label: t('podcast'), ref: refs.podcastRef },
-    { icon: FiMessageCircle, label: t('fanWall'), ref: refs.fanWallRef },
-    { icon: FiShoppingBag, label: t('merch'), ref: refs.merchRef },
-  ];
+    {
+      icon: FiHome,
+      label: t('home'),
+      ref: refs.heroRef,
+      sectionKey: 'hero'
+    },
+    {
+      icon: FiMusic,
+      label: t('music'),
+      ref: refs.musicRef,
+      sectionKey: 'music'
+    },
+    {
+      icon: FiImage,
+      label: t('gallery'),
+      ref: refs.bookletRef,
+      sectionKey: 'gallery'
+    },
+    {
+      icon: FiMic,
+      label: t('podcast'),
+      ref: refs.podcastRef,
+      sectionKey: 'podcast'
+    },
+    {
+      icon: FiMessageCircle,
+      label: t('fanWall'),
+      ref: refs.fanWallRef,
+      sectionKey: 'fanWall'
+    },
+    {
+      icon: FiShoppingBag,
+      label: t('merch'),
+      ref: refs.merchRef,
+      sectionKey: 'merchandising'
+    }
+  ].filter(item => {
+    // Only show items where the section is enabled and set to show in navigation
+    const sectionConfig = sections[item.sectionKey];
+    return sectionConfig?.enabled !== false && sectionConfig?.showInNavigation !== false;
+  });
 
   const handleAdminAccess = () => {
     navigate('/admin');
@@ -128,16 +166,16 @@ const Navigation = ({ onNavigate, refs }) => {
                     onClick={() => handleNavItemClick(item.ref)}
                     className="flex items-center space-x-4 w-full px-4 py-3 text-gray-700 rounded-xl transition-all hover:bg-gray-100 active:bg-gray-200"
                     style={{
-                      '--hover-bg': 'rgba(var(--theme-primary-rgb),0.1)',
+                      '--hover-bg': 'rgba(var(--theme-primary-rgb), 0.1)',
                       '--hover-color': 'var(--theme-primary)'
                     }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    whileHover={{
-                      x: 5,
-                      backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)',
-                      color: 'var(--theme-primary)'
+                    whileHover={{ 
+                      x: 5, 
+                      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)', 
+                      color: 'var(--theme-primary)' 
                     }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -170,19 +208,23 @@ const Navigation = ({ onNavigate, refs }) => {
                   className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all"
                   style={{
                     color: 'var(--theme-primary)',
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.05)'
+                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.05)'
                   }}
-                  whileHover={{
-                    x: 5,
-                    backgroundColor: 'rgba(var(--theme-primary-rgb),0.1)'
+                  whileHover={{ 
+                    x: 5, 
+                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)' 
                   }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb),0.2)' }}
+                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb), 0.2)' }}
                   >
-                    <SafeIcon icon={FiShield} className="text-sm" style={{ color: 'var(--theme-primary)' }} />
+                    <SafeIcon 
+                      icon={FiShield} 
+                      className="text-sm" 
+                      style={{ color: 'var(--theme-primary)' }} 
+                    />
                   </div>
                   <span className="text-base font-medium">{t('adminAccess')}</span>
                 </motion.button>
@@ -220,9 +262,9 @@ const Navigation = ({ onNavigate, refs }) => {
       </AnimatePresence>
 
       {/* GetStarted Guide Modal - Kept for potential future use */}
-      <GetStartedGuide
-        isOpen={showGetStarted}
-        onClose={() => setShowGetStarted(false)}
+      <GetStartedGuide 
+        isOpen={showGetStarted} 
+        onClose={() => setShowGetStarted(false)} 
       />
     </>
   );

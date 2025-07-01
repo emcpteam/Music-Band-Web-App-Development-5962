@@ -1,4 +1,4 @@
-import React,{createContext,useContext,useState,useEffect} from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AdminContext = createContext();
 
@@ -59,8 +59,66 @@ const initialData = {
         showLegalLinks: true
       },
       customLinks: [
-        // Example: {label: "Contact", url: "mailto:contact@band.com", newTab: false}
+        // Example: { label: "Contact", url: "mailto:contact@band.com", newTab: false }
       ]
+    },
+    // Website sections control
+    sections: {
+      hero: {
+        enabled: true,
+        showInNavigation: true
+      },
+      music: {
+        enabled: true,
+        showInNavigation: true
+      },
+      gallery: {
+        enabled: true,
+        showInNavigation: true
+      },
+      podcast: {
+        enabled: true,
+        showInNavigation: true
+      },
+      fanWall: {
+        enabled: true,
+        showInNavigation: true
+      },
+      merchandising: {
+        enabled: true,
+        showInNavigation: true
+      }
+    },
+    // Login page customization
+    loginPage: {
+      title: "Welcome Back to the Cosmos",
+      subtitle: "Join our stellar community and unlock exclusive content, behind-the-scenes access, and personalized music experiences crafted just for you.",
+      backgroundImage: "",
+      backgroundType: "gradient", // 'gradient', 'image', 'solid'
+      backgroundColor: "#8B5CF6",
+      logoImage: "",
+      useCustomLogo: false,
+      features: [
+        {
+          icon: "FiMusic",
+          title: "Exclusive music releases and demos",
+          enabled: true
+        },
+        {
+          icon: "FiStar", 
+          title: "Behind-the-scenes content and stories",
+          enabled: true
+        },
+        {
+          icon: "FiHeadphones",
+          title: "Personalized listening experience",
+          enabled: true
+        }
+      ],
+      termsText: "By signing in, you agree to our",
+      termsLink: "#terms",
+      privacyLink: "#privacy",
+      showTerms: true
     }
   },
   adminCredentials: {
@@ -356,23 +414,13 @@ export const AdminProvider = ({ children }) => {
           band: {
             ...initialData.band,
             ...parsedData.band,
-            seo: {
-              ...initialData.band.seo,
-              ...parsedData.band?.seo
-            },
-            footer: {
-              ...initialData.band.footer,
-              ...parsedData.band?.footer
-            }
+            seo: { ...initialData.band.seo, ...parsedData.band?.seo },
+            footer: { ...initialData.band.footer, ...parsedData.band?.footer },
+            sections: { ...initialData.band.sections, ...parsedData.band?.sections },
+            loginPage: { ...initialData.band.loginPage, ...parsedData.band?.loginPage }
           },
-          theme: {
-            ...initialData.theme,
-            ...parsedData.theme
-          },
-          systemConfig: {
-            ...initialData.systemConfig,
-            ...parsedData.systemConfig
-          }
+          theme: { ...initialData.theme, ...parsedData.theme },
+          systemConfig: { ...initialData.systemConfig, ...parsedData.systemConfig }
         };
         return mergedData;
       } catch (error) {
@@ -397,7 +445,6 @@ export const AdminProvider = ({ children }) => {
   useEffect(() => {
     if (data.theme) {
       const root = document.documentElement;
-
       // Set CSS custom properties
       root.style.setProperty('--theme-primary', data.theme.primaryColor);
       root.style.setProperty('--theme-secondary', data.theme.secondaryColor);
@@ -469,6 +516,28 @@ export const AdminProvider = ({ children }) => {
     setData(prev => ({
       ...prev,
       band: { ...prev.band, ...updates }
+    }));
+  };
+
+  // New function to update sections configuration
+  const updateSectionsConfig = (sectionsUpdates) => {
+    setData(prev => ({
+      ...prev,
+      band: {
+        ...prev.band,
+        sections: { ...prev.band.sections, ...sectionsUpdates }
+      }
+    }));
+  };
+
+  // New function to update login page configuration
+  const updateLoginPageConfig = (loginPageUpdates) => {
+    setData(prev => ({
+      ...prev,
+      band: {
+        ...prev.band,
+        loginPage: { ...prev.band.loginPage, ...loginPageUpdates }
+      }
     }));
   };
 
@@ -719,7 +788,6 @@ export const AdminProvider = ({ children }) => {
       setData(prev => {
         const existingFiles = Array.isArray(prev.uploadedFiles) ? prev.uploadedFiles : [];
         const existingIndex = existingFiles.findIndex(f => f.id === file.id);
-        
         if (existingIndex !== -1) {
           const updatedFiles = [...existingFiles];
           updatedFiles[existingIndex] = { ...existingFiles[existingIndex], ...file };
@@ -786,16 +854,13 @@ export const AdminProvider = ({ children }) => {
       if (currentPassword !== data.adminCredentials.password) {
         return { success: false, error: 'Current password is incorrect' };
       }
-
       if (newPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters' };
       }
-
       setData(prev => ({
         ...prev,
         adminCredentials: { ...prev.adminCredentials, password: newPassword }
       }));
-
       return { success: true };
     } catch (error) {
       console.error('Error changing password:', error);
@@ -825,13 +890,11 @@ export const AdminProvider = ({ children }) => {
       if (username !== data.adminCredentials.username) {
         return { success: false, error: 'Username not found' };
       }
-
       const tempPassword = Math.random().toString(36).substring(2, 10);
       setData(prev => ({
         ...prev,
         adminCredentials: { ...prev.adminCredentials, password: tempPassword }
       }));
-
       return {
         success: true,
         tempPassword,
@@ -849,6 +912,8 @@ export const AdminProvider = ({ children }) => {
     login,
     logout,
     updateBandInfo,
+    updateSectionsConfig, // Section management
+    updateLoginPageConfig, // Login page management
     updateFooterSettings, // Footer management
     updateSeoSettings, // SEO management
     updateTheme,
