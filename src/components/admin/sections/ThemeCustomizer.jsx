@@ -610,7 +610,7 @@ const ThemeCustomizer = () => {
                 backgroundRepeat: 'no-repeat'
               }),
               ...(theme.heroBackgroundType === 'overlay' && theme.heroBackgroundImage && {
-                backgroundImage: `${generateGradientPreview().replace('linear-gradient', `linear-gradient`).replace(')', `, ${theme.heroOverlayOpacity || 0.3})`), url(${theme.heroBackgroundImage})`,
+                backgroundImage: `linear-gradient(rgba(${theme.primaryColor ? theme.primaryColor.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(',') : '139,92,246'}, ${theme.heroOverlayOpacity || 0.3}), rgba(${theme.secondaryColor ? theme.secondaryColor.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(',') : '236,72,153'}, ${theme.heroOverlayOpacity || 0.3})), url(${theme.heroBackgroundImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
@@ -630,11 +630,21 @@ const ThemeCustomizer = () => {
               </div>
               <h1 
                 className="text-2xl font-bold mb-2"
-                style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'white' : theme.textColor, textShadow: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none' }}
+                style={{ 
+                  color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'white' : theme.textColor, 
+                  textShadow: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none' 
+                }}
               >
                 Band Name
               </h1>
-              <p className="text-gray-600" style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined }}>Album Title - Preview</p>
+              <p 
+                className="text-gray-600" 
+                style={{ 
+                  color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined 
+                }}
+              >
+                Album Title - Preview
+              </p>
             </div>
 
             {/* Preview Buttons */}
@@ -729,7 +739,12 @@ const ThemeCustomizer = () => {
             </div>
 
             {/* Theme Info */}
-            <div className="mt-6 text-xs text-gray-500 space-y-1 relative z-10" style={{ color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined }}>
+            <div 
+              className="mt-6 text-xs text-gray-500 space-y-1 relative z-10" 
+              style={{ 
+                color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined 
+              }}
+            >
               <p><strong>Primary:</strong> {theme.primaryColor}</p>
               <p><strong>Secondary:</strong> {theme.secondaryColor}</p>
               <p><strong>Accent:</strong> {theme.accentColor}</p>
