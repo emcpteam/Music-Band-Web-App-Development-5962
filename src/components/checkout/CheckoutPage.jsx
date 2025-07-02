@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import * as FiIcons from 'react-icons/fi';
@@ -9,42 +9,109 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import CheckoutForm from './CheckoutForm';
 import OrderSummary from './OrderSummary';
+import CheckoutProgress from './CheckoutProgress';
+import CheckoutSecurity from './CheckoutSecurity';
+import { useBandData } from '../../contexts/AdminContext';
 
-const { FiArrowLeft, FiLock, FiShield } = FiIcons;
+const { FiArrowLeft, FiLock, FiShield, FiCreditCard, FiTruck, FiCheck } = FiIcons;
 
-// Initialize Stripe (use test key for demo)
-const stripePromise = loadStripe('pk_test_51234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+// Get Stripe configuration from admin settings
+const getStripeConfig = () => {
+  try {
+    const adminData = JSON.parse(localStorage.getItem('bandAdminData') || '{}');
+    const stripeConfig = adminData.systemConfig?.stripe;
+    
+    if (stripeConfig?.testMode) {
+      return stripeConfig.publishableKey || 'pk_test_51234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    } else {
+      return stripeConfig.publishableKey || 'pk_test_51234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    }
+  } catch (error) {
+    console.error('Error reading Stripe config:', error);
+    return 'pk_test_51234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+  }
+};
+
+const stripePromise = loadStripe(getStripeConfig());
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { cartItems, getCartTotal, getCartItemCount } = useCart();
   const { isAuthenticated } = useAuth();
+  const bandData = useBandData();
+  
   const [currentStep, setCurrentStep] = useState(1);
+  const [checkoutData, setCheckoutData] = useState({
+    shipping: null,
+    billing: null,
+    payment: null
+  });
+  const [errors, setErrors] = useState({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showExitIntent, setShowExitIntent] = useState(false);
 
+  // Exit intent detection
   useEffect(() => {
-    console.log('CheckoutPage mounted'); // Debug log
-    console.log('Cart items:', cartItems); // Debug log
-    console.log('Is authenticated:', isAuthenticated); // Debug log
+    let exitIntentShown = false;
+    
+    const handleMouseLeave = (e) => {
+      if (e.clientY <= 0 && !exitIntentShown && cartItems.length > 0) {
+        setShowExitIntent(true);
+        exitIntentShown = true;
+      }
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, [cartItems.length]);
+
+  // Redirect checks
+  useEffect(() => {
+    console.log('CheckoutPage mounted');
+    console.log('Cart items:', cartItems);
+    console.log('Is authenticated:', isAuthenticated);
 
     // Redirect to main page if cart is empty
     if (cartItems.length === 0) {
       console.log('Cart is empty, redirecting to main page');
-      navigate('/');
+      navigate('/', { replace: true });
       return;
     }
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
       console.log('User not authenticated, redirecting to login');
-      navigate('/login');
+      navigate('/login', { 
+        state: { from: location, returnTo: '/checkout' },
+        replace: true 
+      });
       return;
     }
-  }, [cartItems.length, isAuthenticated, navigate]);
+  }, [cartItems.length, isAuthenticated, navigate, location]);
 
   const steps = [
-    { id: 1, name: 'Shipping', description: 'Delivery information' },
-    { id: 2, name: 'Payment', description: 'Secure payment' },
-    { id: 3, name: 'Review', description: 'Confirm order' }
+    { 
+      id: 1, 
+      name: 'Shipping', 
+      description: 'Delivery information',
+      icon: FiTruck,
+      completed: !!checkoutData.shipping
+    },
+    { 
+      id: 2, 
+      name: 'Payment', 
+      description: 'Secure payment',
+      icon: FiCreditCard,
+      completed: !!checkoutData.payment
+    },
+    { 
+      id: 3, 
+      name: 'Review', 
+      description: 'Confirm order',
+      icon: FiCheck,
+      completed: false
+    }
   ];
 
   const formatPrice = (price) => {
@@ -55,25 +122,53 @@ const CheckoutPage = () => {
   };
 
   const handleBackToStore = () => {
-    console.log('Back to store clicked'); // Debug log
-    navigate('/');
+    console.log('Back to store clicked');
+    navigate('/', { replace: true });
   };
 
-  // Don't render if cart is empty
-  if (cartItems.length === 0) {
+  const handleStepData = (step, data) => {
+    setCheckoutData(prev => ({
+      ...prev,
+      [step]: data
+    }));
+    setErrors(prev => ({ ...prev, [step]: null }));
+  };
+
+  const handleError = (step, error) => {
+    setErrors(prev => ({ ...prev, [step]: error }));
+  };
+
+  // Don't render if cart is empty or not authenticated
+  if (cartItems.length === 0 || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-8">Add some items to your cart before proceeding to checkout.</p>
-          <motion.button
-            onClick={handleBackToStore}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            Continue Shopping
-          </motion.button>
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <SafeIcon icon={FiLock} className="text-2xl text-gray-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">
+              {cartItems.length === 0 ? 'Your cart is empty' : 'Authentication required'}
+            </h1>
+            <p className="text-gray-600 mb-8">
+              {cartItems.length === 0 
+                ? 'Add some items to your cart before proceeding to checkout.'
+                : 'Please sign in to complete your purchase.'
+              }
+            </p>
+            <motion.button
+              onClick={handleBackToStore}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {cartItems.length === 0 ? 'Continue Shopping' : 'Go to Sign In'}
+            </motion.button>
+          </motion.div>
         </div>
       </div>
     );
@@ -83,7 +178,12 @@ const CheckoutPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <motion.div 
+          className="flex items-center justify-between mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <motion.button
             onClick={handleBackToStore}
             className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
@@ -107,52 +207,29 @@ const CheckoutPage = () => {
               {getCartItemCount()} items • {formatPrice(getCartTotal())}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center space-x-8">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                      currentStep >= step.id
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {step.id}
-                  </div>
-                  <div className="text-center mt-2">
-                    <p className={`text-sm font-medium ${
-                      currentStep >= step.id ? 'text-purple-600' : 'text-gray-600'
-                    }`}>
-                      {step.name}
-                    </p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-16 h-0.5 mx-4 transition-all ${
-                      currentStep > step.id ? 'bg-purple-500' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <CheckoutProgress 
+          steps={steps} 
+          currentStep={currentStep} 
+          onStepClick={setCurrentStep}
+        />
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Checkout Form */}
           <div className="lg:col-span-2">
             <Elements stripe={stripePromise}>
-              <CheckoutForm 
-                currentStep={currentStep} 
+              <CheckoutForm
+                currentStep={currentStep}
                 setCurrentStep={setCurrentStep}
+                checkoutData={checkoutData}
+                onStepData={handleStepData}
+                onError={handleError}
+                errors={errors}
+                isProcessing={isProcessing}
+                setIsProcessing={setIsProcessing}
               />
             </Elements>
           </div>
@@ -163,27 +240,58 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        {/* Security Badges */}
-        <motion.div 
-          className="mt-12 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <div className="inline-flex items-center space-x-6 p-4 bg-white/70 backdrop-blur-md rounded-2xl shadow-lg">
-            <div className="flex items-center space-x-2">
-              <SafeIcon icon={FiShield} className="text-green-600" />
-              <span className="text-sm text-gray-700">256-bit SSL Encryption</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <SafeIcon icon={FiLock} className="text-blue-600" />
-              <span className="text-sm text-gray-700">Secure Payment</span>
-            </div>
-            <div className="text-sm text-gray-700">
-              Powered by <strong>Stripe</strong>
-            </div>
-          </div>
-        </motion.div>
+        {/* Security Section */}
+        <CheckoutSecurity />
+
+        {/* Exit Intent Modal */}
+        <AnimatePresence>
+          {showExitIntent && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowExitIntent(false)}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <SafeIcon icon={FiShield} className="text-white text-2xl" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  Wait! Don't leave yet
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  You're about to get some amazing {bandData.band.name} merchandise. 
+                  Complete your order now and join thousands of satisfied fans!
+                </p>
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={() => setShowExitIntent(false)}
+                    className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Complete My Order
+                  </motion.button>
+                  <motion.button
+                    onClick={handleBackToStore}
+                    className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Continue Shopping
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
