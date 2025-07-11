@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -43,7 +43,7 @@ export default defineConfig({
   },
   esbuild: {
     target: 'es2015',
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    logOverride: {'this-is-undefined-in-esm': 'silent'}
   },
   define: {
     global: 'globalThis',
@@ -51,8 +51,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
-      'react', 
-      'react-dom', 
+      'react',
+      'react-dom',
       'react-router-dom',
       'react-icons/fi',
       'framer-motion',

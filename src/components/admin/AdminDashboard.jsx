@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React,{useState,useEffect} from 'react';
+import {motion} from 'framer-motion';
+import {useNavigate} from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
-import { useAdmin } from '../../contexts/AdminContext';
-import { useLanguage } from '../../contexts/LanguageContext';
-
+import {useAdmin} from '../../contexts/AdminContext';
+import {useLanguage} from '../../contexts/LanguageContext';
 import BandSettings from './sections/BandSettings';
 import ThemeCustomizer from './sections/ThemeCustomizer';
 import AlbumManager from './sections/AlbumManager';
@@ -20,20 +19,15 @@ import TranslationManager from './sections/TranslationManager';
 import SystemConfiguration from './sections/SystemConfiguration';
 import FooterSettings from './sections/FooterSettings';
 import SeoSettings from './sections/SeoSettings';
-import WebsiteSettings from './sections/WebsiteSettings';
 import LanguageSelector from '../common/LanguageSelector';
 
-const {
-  FiHome, FiSettings, FiPalette, FiMusic, FiMic, FiImage, FiShoppingBag,
-  FiLogOut, FiMenu, FiX, FiDisc, FiHeadphones, FiUpload, FiMessageCircle,
-  FiUser, FiGlobe, FiTool, FiLayers, FiSearch, FiEye, FiToggleLeft
-} = FiIcons;
+const {FiHome,FiSettings,FiPalette,FiMusic,FiMic,FiImage,FiShoppingBag,FiLogOut,FiMenu,FiX,FiDisc,FiHeadphones,FiUpload,FiMessageCircle,FiUser,FiGlobe,FiTool,FiLayers,FiSearch} = FiIcons;
 
 const AdminDashboard = () => {
-  const [activeSection, setActiveSection] = useState('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { logout, data, isAuthenticated } = useAdmin();
-  const { ta } = useLanguage();
+  const [activeSection,setActiveSection] = useState('overview');
+  const [sidebarOpen,setSidebarOpen] = useState(false);
+  const {logout,data,isAuthenticated} = useAdmin();
+  const {ta} = useLanguage();
   const navigate = useNavigate();
 
   // Check authentication on mount
@@ -41,7 +35,7 @@ const AdminDashboard = () => {
     if (!isAuthenticated) {
       navigate('/admin');
     }
-  }, [isAuthenticated, navigate]);
+  },[isAuthenticated,navigate]);
 
   // Don't render if not authenticated
   if (!isAuthenticated) {
@@ -49,22 +43,21 @@ const AdminDashboard = () => {
   }
 
   const menuItems = [
-    { id: 'overview', label: ta('overview'), icon: FiHome },
-    { id: 'website', label: 'Website Settings', icon: FiEye },
-    { id: 'band', label: ta('bandSettings'), icon: FiSettings },
-    { id: 'theme', label: ta('themeCustomizer'), icon: FiPalette },
-    { id: 'albums', label: ta('albums'), icon: FiDisc },
-    { id: 'songs', label: ta('songs'), icon: FiMusic },
-    { id: 'podcasts', label: ta('podcasts'), icon: FiMic },
-    { id: 'media', label: ta('mediaGallery'), icon: FiImage },
-    { id: 'products', label: ta('merchandise'), icon: FiShoppingBag },
-    { id: 'uploads', label: ta('fileManager'), icon: FiUpload },
-    { id: 'comments', label: ta('comments'), icon: FiMessageCircle },
-    { id: 'footer', label: 'Footer Settings', icon: FiLayers },
-    { id: 'seo', label: 'SEO & Meta Tags', icon: FiSearch },
-    { id: 'translations', label: ta('translationManager'), icon: FiGlobe },
-    { id: 'config', label: 'System Config', icon: FiTool },
-    { id: 'account', label: ta('accountSettings'), icon: FiUser }
+    {id: 'overview',label: ta('overview'),icon: FiHome},
+    {id: 'band',label: ta('bandSettings'),icon: FiSettings},
+    {id: 'theme',label: ta('themeCustomizer'),icon: FiPalette},
+    {id: 'albums',label: ta('albums'),icon: FiDisc},
+    {id: 'songs',label: ta('songs'),icon: FiMusic},
+    {id: 'podcasts',label: ta('podcasts'),icon: FiMic},
+    {id: 'media',label: ta('mediaGallery'),icon: FiImage},
+    {id: 'products',label: ta('merchandise'),icon: FiShoppingBag},
+    {id: 'uploads',label: ta('fileManager'),icon: FiUpload},
+    {id: 'comments',label: ta('comments'),icon: FiMessageCircle},
+    {id: 'footer',label: 'Footer Settings',icon: FiLayers},
+    {id: 'seo',label: 'SEO & Meta Tags',icon: FiSearch},
+    {id: 'translations',label: ta('translationManager'),icon: FiGlobe},
+    {id: 'config',label: 'System Config',icon: FiTool},
+    {id: 'account',label: ta('accountSettings'),icon: FiUser}
   ];
 
   const handleLogout = () => {
@@ -76,8 +69,6 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case 'overview':
         return <OverviewSection />;
-      case 'website':
-        return <WebsiteSettings />;
       case 'band':
         return <BandSettings />;
       case 'theme':
@@ -113,8 +104,8 @@ const AdminDashboard = () => {
 
   const OverviewSection = () => (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0,y: 20 }}
+      animate={{ opacity: 1,y: 0 }}
       transition={{ duration: 0.6 }}
       className="space-y-6"
     >
@@ -222,7 +213,7 @@ const AdminDashboard = () => {
         <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">{ta('recentSongs')}</h3>
           <div className="space-y-3">
-            {data.songs.slice(0, 3).map(song => (
+            {data.songs.slice(0,3).map(song => (
               <div key={song.id} className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
                   <SafeIcon icon={FiMusic} className="text-white text-sm" />
@@ -239,13 +230,6 @@ const AdminDashboard = () => {
         <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">{ta('quickActions')}</h3>
           <div className="space-y-3">
-            <button
-              onClick={() => setActiveSection('website')}
-              className="w-full flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
-            >
-              <SafeIcon icon={FiEye} className="text-purple-600" />
-              <span className="text-gray-700">Website Settings</span>
-            </button>
             <button
               onClick={() => setActiveSection('uploads')}
               className="w-full flex items-center space-x-3 p-3 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
@@ -357,16 +341,16 @@ const AdminDashboard = () => {
               >
                 <SafeIcon icon={item.icon} className="text-lg" />
                 <span className="font-medium">{item.label}</span>
-                
+
                 {/* Show pending count for comments */}
                 {item.id === 'comments' && data.comments?.filter(c => c.status === 'pending').length > 0 && (
                   <span className="ml-auto bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
                     {data.comments.filter(c => c.status === 'pending').length}
                   </span>
                 )}
-                
+
                 {/* Highlight new features */}
-                {(item.id === 'website' || item.id === 'footer' || item.id === 'seo' || item.id === 'config') && (
+                {(item.id === 'footer' || item.id === 'seo' || item.id === 'config') && (
                   <span className="ml-auto bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                     NEW
                   </span>

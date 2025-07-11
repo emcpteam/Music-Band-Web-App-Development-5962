@@ -25,7 +25,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   });
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
-  
+
   const progressBarRef = useRef(null);
   const bandData = useBandData();
   const { t } = useLanguage();
@@ -33,6 +33,18 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   const tracks = bandData.songs.filter(song => song.isActive);
   const currentAlbum = bandData.albums.find(album => album.isActive) || bandData.albums[0];
   const currentSong = tracks[currentTrack];
+
+  // Ensure we have valid tracks before proceeding
+  useEffect(() => {
+    if (tracks.length === 0) {
+      return;
+    }
+    
+    // If currentTrack is out of bounds, reset it to 0
+    if (currentTrack >= tracks.length) {
+      setCurrentTrack(0);
+    }
+  }, [tracks, currentTrack, setCurrentTrack]);
 
   // Save liked songs to localStorage whenever it changes
   useEffect(() => {
@@ -126,25 +138,34 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   useEffect(() => {
     if (audioRef.current && currentSong?.audioUrl) {
       const audio = audioRef.current;
-      
+
       // Reset state
       setCurrentTime(0);
       setDuration(0);
       setIsLoading(true);
-      
+
       // Set new source
-      audio.src = currentSong.audioUrl;
-      audio.load();
-      
-      // Auto-play if was playing
-      if (isPlaying) {
-        audio.play().catch(error => {
-          console.error('Auto-play failed:', error);
-          setIsPlaying(false);
-        });
+      try {
+        audio.src = currentSong.audioUrl;
+        audio.load();
+        
+        // Auto-play if was playing
+        if (isPlaying) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error('Auto-play failed:', error);
+              setIsPlaying(false);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading audio:', error);
+        setIsLoading(false);
+        setIsPlaying(false);
       }
     }
-  }, [currentTrack, currentSong?.audioUrl]);
+  }, [currentTrack, currentSong?.audioUrl, isPlaying]);
 
   // Update volume when volume state changes
   useEffect(() => {
@@ -158,10 +179,13 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(error => {
-          console.error('Play failed:', error);
-          setIsPlaying(false);
-        });
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error('Play failed:', error);
+            setIsPlaying(false);
+          });
+        }
       }
     }
   };
@@ -190,7 +214,6 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
       const rect = progressBar.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const newTime = (clickX / rect.width) * duration;
-      
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
@@ -207,7 +230,6 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
       const rect = progressBar.getBoundingClientRect();
       const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
       const newTime = (clickX / rect.width) * duration;
-      
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
@@ -222,10 +244,10 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
     if (isDragging) {
       const handleMouseMove = (e) => handleProgressMouseMove(e);
       const handleMouseUp = () => handleProgressMouseUp();
-      
+
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -251,7 +273,6 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
   // Handle Like Button
   const handleLike = () => {
     if (!currentSong) return;
-
     const songId = currentSong.id;
     const isCurrentlyLiked = likedSongs.includes(songId);
 
@@ -397,8 +418,12 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                   src={currentAlbum?.cover || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop&crop=center"}
                   alt={tracks[currentTrack]?.title}
                   className="w-full h-full rounded-2xl object-cover shadow-lg"
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/400x400?text=Album+Cover";
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+
                 {/* Loading indicator */}
                 {isLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
@@ -406,6 +431,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                   </div>
                 )}
               </div>
+
               <h3 className="text-2xl font-semibold theme-text mb-2">
                 {tracks[currentTrack]?.title}
               </h3>
@@ -455,18 +481,18 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
-              <div 
+              <div
                 ref={progressBarRef}
                 className="w-full h-2 bg-gray-200 rounded-full cursor-pointer relative"
                 onClick={handleProgressClick}
                 onMouseDown={handleProgressMouseDown}
               >
-                <div 
+                <div
                   className="h-2 rounded-full transition-all duration-150 theme-gradient"
                   style={{ width: `${progressPercentage}%` }}
                 />
                 {/* Drag handle */}
-                <div 
+                <div
                   className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md cursor-grab active:cursor-grabbing"
                   style={{ left: `calc(${progressPercentage}% - 8px)` }}
                   onMouseDown={(e) => {
@@ -497,8 +523,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <motion.button
                 onClick={handleLike}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all ${
-                  isLiked 
-                    ? 'bg-red-100 text-red-600' 
+                  isLiked
+                    ? 'bg-red-100 text-red-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'
                 }`}
                 whileHover={{ scale: 1.05 }}
@@ -557,11 +583,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
             </div>
 
             {/* Hidden Audio Element */}
-            <audio 
-              ref={audioRef} 
-              preload="metadata"
-              crossOrigin="anonymous"
-            />
+            <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" />
           </motion.div>
 
           {/* Lyrics & Track List */}
@@ -576,8 +598,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(true)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  showLyrics 
-                    ? 'text-white shadow-lg btn-primary' 
+                  showLyrics
+                    ? 'text-white shadow-lg btn-primary'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -586,8 +608,8 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
               <button
                 onClick={() => setShowLyrics(false)}
                 className={`flex-1 py-3 px-4 rounded-xl transition-all ${
-                  !showLyrics 
-                    ? 'text-white shadow-lg btn-primary' 
+                  !showLyrics
+                    ? 'text-white shadow-lg btn-primary'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -611,6 +633,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                   <div className="theme-text whitespace-pre-line mb-6 leading-relaxed">
                     {tracks[currentTrack]?.lyrics || t('noLyricsAvailable')}
                   </div>
+
                   {tracks[currentTrack]?.notes && (
                     <div className="border-t pt-4">
                       <h5 className="font-medium theme-text mb-2">{t('artistNotes')}</h5>
@@ -636,25 +659,27 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                         key={track.id}
                         onClick={() => handleTrackSelect(index)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${
-                          currentTrack === index
-                            ? 'text-white border-2'
-                            : 'hover:bg-gray-50'
+                          currentTrack === index ? 'text-white border-2' : 'hover:bg-gray-50'
                         }`}
                         style={{
-                          backgroundImage: currentTrack === index 
-                            ? `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))` 
-                            : undefined,
-                          borderColor: currentTrack === index ? 'var(--theme-primary)' : 'transparent'
+                          backgroundImage:
+                            currentTrack === index
+                              ? `linear-gradient(45deg,var(--theme-primary),var(--theme-secondary))`
+                              : undefined,
+                          borderColor:
+                            currentTrack === index ? 'var(--theme-primary)' : 'transparent'
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex items-center space-x-4">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            currentTrack === index 
-                              ? 'bg-white/20 text-white' 
-                              : 'bg-gray-200 text-gray-600'
-                          }`}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              currentTrack === index
+                                ? 'bg-white/20 text-white'
+                                : 'bg-gray-200 text-gray-600'
+                            }`}
+                          >
                             {currentTrack === index && isPlaying ? (
                               <SafeIcon icon={FiPause} className="text-sm" />
                             ) : (
@@ -663,30 +688,36 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
                           </div>
                           <div className="text-left flex items-center space-x-2">
                             <div>
-                              <p className={`font-medium ${
-                                currentTrack === index ? 'text-white' : 'theme-text'
-                              }`}>
+                              <p
+                                className={`font-medium ${
+                                  currentTrack === index ? 'text-white' : 'theme-text'
+                                }`}
+                              >
                                 {track.title}
                               </p>
-                              <p className={`text-sm ${
-                                currentTrack === index ? 'text-white/80' : 'text-gray-600'
-                              }`}>
+                              <p
+                                className={`text-sm ${
+                                  currentTrack === index ? 'text-white/80' : 'text-gray-600'
+                                }`}
+                              >
                                 {getAlbumTitle(track.albumId)}
                               </p>
                             </div>
                             {likedSongs.includes(track.id) && (
-                              <SafeIcon 
-                                icon={FiHeart} 
+                              <SafeIcon
+                                icon={FiHeart}
                                 className={`text-sm fill-current ${
                                   currentTrack === index ? 'text-white' : 'text-red-500'
-                                }`} 
+                                }`}
                               />
                             )}
                           </div>
                         </div>
-                        <span className={`text-sm ${
-                          currentTrack === index ? 'text-white/80' : 'text-gray-600'
-                        }`}>
+                        <span
+                          className={`text-sm ${
+                            currentTrack === index ? 'text-white/80' : 'text-gray-600'
+                          }`}
+                        >
                           {track.duration}
                         </span>
                       </motion.button>
@@ -701,10 +732,7 @@ const MusicPlayer = ({ currentTrack, setCurrentTrack, isPlaying, setIsPlaying, a
 
       {/* Backdrop for share menu */}
       {showShareMenu && (
-        <div 
-          className="fixed inset-0 z-10" 
-          onClick={() => setShowShareMenu(false)} 
-        />
+        <div className="fixed inset-0 z-10" onClick={() => setShowShareMenu(false)} />
       )}
     </div>
   );

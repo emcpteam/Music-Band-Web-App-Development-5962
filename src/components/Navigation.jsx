@@ -1,272 +1,166 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
-import { useBandData } from '../contexts/AdminContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAdmin } from '../contexts/AdminContext';
 import { useAuth } from '../contexts/AuthContext';
-import LanguageSelector from './common/LanguageSelector';
+import { Link, useNavigate } from 'react-router-dom';
 import CartButton from './cart/CartButton';
-import GetStartedGuide from './GetStartedGuide';
 
-const { FiMenu, FiX, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiHome, FiShield, FiGlobe, FiUser, FiLogIn, FiLogOut, FiStar } = FiIcons;
+const { FiMenu, FiX, FiHome, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiUser, FiLogIn, FiLogOut } = FiIcons;
 
 const Navigation = ({ onNavigate, refs }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showGetStarted, setShowGetStarted] = useState(false);
-  const navigate = useNavigate();
-  const bandData = useBandData();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { data } = useAdmin();
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  // Get section visibility settings
+  const { sectionVisibility } = data.band;
 
-  // Get sections configuration
-  const sections = bandData.band.sections || {};
-
-  // Build navigation items based on sections configuration
+  // Filter navigation items based on visibility settings
   const navItems = [
-    {
-      icon: FiHome,
-      label: t('home'),
-      ref: refs.heroRef,
-      sectionKey: 'hero'
-    },
-    {
-      icon: FiMusic,
-      label: t('music'),
-      ref: refs.musicRef,
-      sectionKey: 'music'
-    },
-    {
-      icon: FiImage,
-      label: t('gallery'),
-      ref: refs.bookletRef,
-      sectionKey: 'gallery'
-    },
-    {
-      icon: FiMic,
-      label: t('podcast'),
-      ref: refs.podcastRef,
-      sectionKey: 'podcast'
-    },
-    {
-      icon: FiMessageCircle,
-      label: t('fanWall'),
-      ref: refs.fanWallRef,
-      sectionKey: 'fanWall'
-    },
-    {
-      icon: FiShoppingBag,
-      label: t('merch'),
-      ref: refs.merchRef,
-      sectionKey: 'merchandising'
-    }
-  ].filter(item => {
-    // Only show items where the section is enabled and set to show in navigation
-    const sectionConfig = sections[item.sectionKey];
-    return sectionConfig?.enabled !== false && sectionConfig?.showInNavigation !== false;
-  });
+    { icon: FiHome, label: t('home'), ref: refs.heroRef, visible: true },
+    { icon: FiMusic, label: t('music'), ref: refs.musicRef, visible: true },
+    { icon: FiImage, label: t('gallery'), ref: refs.bookletRef, visible: sectionVisibility.gallery },
+    { icon: FiMic, label: t('podcast'), ref: refs.podcastRef, visible: sectionVisibility.podcast },
+    { icon: FiMessageCircle, label: t('fanWall'), ref: refs.fanWallRef, visible: sectionVisibility.fanWall },
+    { icon: FiShoppingBag, label: t('merch'), ref: refs.merchRef, visible: sectionVisibility.merchandising }
+  ].filter(item => item.visible !== false);
 
-  const handleAdminAccess = () => {
-    navigate('/admin');
-    setIsOpen(false);
+  const handleNavigate = (ref) => {
+    onNavigate(ref);
+    setMobileMenuOpen(false);
   };
 
-  const handleNavItemClick = (itemRef) => {
-    onNavigate(itemRef);
-    setIsOpen(false);
+  const handleLogin = () => {
+    navigate('/login');
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    navigate('/admin');
+    setMobileMenuOpen(false);
   };
 
   return (
-    <>
-      <motion.nav
-        className="fixed top-0 left-0 right-0 z-50 theme-nav border-b"
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="max-w-7xl mx-auto pl-6 pr-4 sm:pr-6 lg:pr-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Band Name - Fixed 25px from left */}
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center">
             <motion.div
-              className="flex items-center cursor-pointer"
-              style={{ marginLeft: '25px' }}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => onNavigate(refs.heroRef)}
+              className="w-10 h-10 rounded-full flex items-center justify-center mr-2"
+              style={{ background: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))` }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <span className="font-semibold theme-text text-xl">{bandData.band.name}</span>
+              <SafeIcon icon={FiMusic} className="text-white text-lg" />
             </motion.div>
+            <span className="font-bold text-gray-800">{data.band.name}</span>
+          </div>
 
-            {/* Desktop Navigation - Hidden on tablet and mobile */}
-            <div className="hidden xl:flex items-center space-x-6">
-              {navItems.map((item, index) => (
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            {navItems.map((item) => (
+              <motion.button
+                key={item.label}
+                onClick={() => handleNavigate(item.ref)}
+                className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-current"
+                whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <SafeIcon icon={item.icon} className="text-sm" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Right Section: Auth & Cart */}
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
                 <motion.button
-                  key={item.label}
-                  onClick={() => onNavigate(item.ref)}
-                  className="flex items-center space-x-2 text-gray-600 transition-colors hover:text-current"
-                  style={{ '--hover-color': 'var(--theme-primary)' }}
-                  whileHover={{ scale: 1.05, color: 'var(--theme-primary)' }}
+                  onClick={handleAdminClick}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <SafeIcon icon={item.icon} className="text-sm" />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <SafeIcon icon={FiUser} className="text-sm" />
+                  <span className="text-sm font-medium hidden sm:inline">Admin</span>
                 </motion.button>
-              ))}
-
-              {/* Cart Button - Desktop */}
-              <CartButton />
-
-              {/* Language Selector - Desktop */}
-              <LanguageSelector />
-
-              {/* Admin Access - Desktop */}
+                <motion.button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <SafeIcon icon={FiLogOut} className="text-sm" />
+                  <span className="text-sm font-medium hidden sm:inline">Logout</span>
+                </motion.button>
+              </div>
+            ) : (
               <motion.button
-                onClick={handleAdminAccess}
-                className="flex items-center space-x-2 theme-primary transition-colors"
+                onClick={handleLogin}
+                className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                title={t('adminAccess')}
               >
-                <SafeIcon icon={FiShield} className="text-sm" />
-                <span className="text-sm font-medium">{t('admin')}</span>
+                <SafeIcon icon={FiLogIn} className="text-sm" />
+                <span className="text-sm font-medium hidden sm:inline">Login</span>
               </motion.button>
-            </div>
+            )}
 
-            {/* Mobile/Tablet Menu Button - Shows on tablet and mobile */}
-            <div className="xl:hidden flex items-center space-x-3">
-              {/* Cart Button - Mobile/Tablet */}
-              <CartButton />
+            {/* Cart Button */}
+            <CartButton />
+
+            {/* Mobile Menu Button */}
+            <div className="flex md:hidden">
               <motion.button
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={() => setIsOpen(!isOpen)}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Toggle navigation menu"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 text-gray-600 hover:text-purple-600 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <SafeIcon icon={isOpen ? FiX : FiMenu} className="text-2xl text-gray-600" />
+                <SafeIcon icon={mobileMenuOpen ? FiX : FiMenu} className="text-xl" />
               </motion.button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile/Tablet Menu */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="xl:hidden theme-nav border-t backdrop-blur-md"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
-              <div className="px-4 py-4 space-y-2 max-h-[80vh] overflow-y-auto">
-                {/* Navigation Items */}
-                {navItems.map((item, index) => (
-                  <motion.button
-                    key={item.label}
-                    onClick={() => handleNavItemClick(item.ref)}
-                    className="flex items-center space-x-4 w-full px-4 py-3 text-gray-700 rounded-xl transition-all hover:bg-gray-100 active:bg-gray-200"
-                    style={{
-                      '--hover-bg': 'rgba(var(--theme-primary-rgb), 0.1)',
-                      '--hover-color': 'var(--theme-primary)'
-                    }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ 
-                      x: 5, 
-                      backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)', 
-                      color: 'var(--theme-primary)' 
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                      <SafeIcon icon={item.icon} className="text-sm text-gray-600" />
-                    </div>
-                    <span className="text-base font-medium">{item.label}</span>
-                  </motion.button>
-                ))}
-
-                {/* Divider */}
-                <div className="my-4 border-t border-gray-200"></div>
-
-                {/* Language Selector - Mobile/Tablet */}
-                <div className="px-4 py-2">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                      <SafeIcon icon={FiGlobe} className="text-sm text-gray-600" />
-                    </div>
-                    <span className="text-base font-medium text-gray-700">Language</span>
-                  </div>
-                  <div className="ml-11">
-                    <LanguageSelector />
-                  </div>
-                </div>
-
-                {/* Admin Access - Mobile/Tablet */}
-                <motion.button
-                  onClick={handleAdminAccess}
-                  className="flex items-center space-x-4 w-full px-4 py-3 rounded-xl transition-all"
-                  style={{
-                    color: 'var(--theme-primary)',
-                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.05)'
-                  }}
-                  whileHover={{ 
-                    x: 5, 
-                    backgroundColor: 'rgba(var(--theme-primary-rgb), 0.1)' 
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(var(--theme-primary-rgb), 0.2)' }}
-                  >
-                    <SafeIcon 
-                      icon={FiShield} 
-                      className="text-sm" 
-                      style={{ color: 'var(--theme-primary)' }} 
-                    />
-                  </div>
-                  <span className="text-base font-medium">{t('adminAccess')}</span>
-                </motion.button>
-
-                {/* Close Menu Button */}
-                <motion.button
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center w-full px-4 py-3 mt-6 text-gray-600 bg-gray-100 rounded-xl transition-colors hover:bg-gray-200"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <SafeIcon icon={FiX} className="text-lg mr-2" />
-                  <span className="text-base font-medium">Close Menu</span>
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
-
-      {/* Spacer for fixed navigation */}
-      <div className="h-16"></div>
-
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 xl:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* GetStarted Guide Modal - Kept for potential future use */}
-      <GetStartedGuide 
-        isOpen={showGetStarted} 
-        onClose={() => setShowGetStarted(false)} 
-      />
-    </>
+      {/* Mobile Menu */}
+      <motion.div
+        className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: mobileMenuOpen ? 1 : 0, height: mobileMenuOpen ? 'auto' : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="px-2 pt-2 pb-4 bg-white/90 backdrop-blur-md shadow-lg">
+          <div className="space-y-2">
+            {navItems.map((item) => (
+              <motion.button
+                key={item.label}
+                onClick={() => handleNavigate(item.ref)}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors"
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={item.icon} className="text-lg" />
+                <span className="font-medium">{item.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </nav>
   );
 };
 
