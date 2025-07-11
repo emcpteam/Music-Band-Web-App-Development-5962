@@ -1,4 +1,4 @@
-import {defineConfig} from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false,
+    sourcemap: true, // Enable source maps for debugging
     minify: 'esbuild',
     target: 'es2015',
     emptyOutDir: true,
@@ -20,34 +20,18 @@ export default defineConfig({
           motion: ['framer-motion'],
           quest: ['@questlabs/react-sdk']
         }
-      },
-      external: [],
-      onwarn: (warning, warn) => {
-        // Suppress specific warnings that don't affect functionality
-        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
-        if (warning.code === 'SOURCEMAP_ERROR') return
-        warn(warning)
       }
     }
   },
-  server: {
-    port: 3000,
-    host: true,
-    hmr: {
-      port: 3001
-    }
-  },
-  preview: {
-    port: 4173,
-    host: true
-  },
-  esbuild: {
-    target: 'es2015',
-    logOverride: {'this-is-undefined-in-esm': 'silent'}
-  },
   define: {
+    // Ensure these values are available at build time
+    'process.env': {},
     global: 'globalThis',
-    'process.env': {}
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   },
   optimizeDeps: {
     include: [
@@ -57,12 +41,6 @@ export default defineConfig({
       'react-icons/fi',
       'framer-motion',
       '@questlabs/react-sdk'
-    ],
-    exclude: ['@supabase/supabase-js']
-  },
-  resolve: {
-    alias: {
-      '@': '/src'
-    }
+    ]
   }
 })

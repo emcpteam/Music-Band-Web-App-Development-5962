@@ -1,67 +1,72 @@
-import React from 'react'
-import {HashRouter as Router, Routes, Route} from 'react-router-dom'
-import {QuestProvider} from '@questlabs/react-sdk'
-import '@questlabs/react-sdk/dist/style.css'
-import {AuthProvider} from '../contexts/AuthContext'
-import {AdminProvider} from '../contexts/AdminContext'
-import {LanguageProvider} from '../contexts/LanguageContext'
-import {ThemeProvider} from '../contexts/ThemeContext'
-import {CartProvider} from '../contexts/CartContext'
-import questConfig from '../config/questConfig'
-import LoginPage from './auth/LoginPage'
-import OnboardingPage from './auth/OnboardingPage'
-import ProtectedRoute from './auth/ProtectedRoute'
-import MainApp from './MainApp'
-import AdminLogin from './admin/AdminLogin'
-import AdminDashboard from './admin/AdminDashboard'
-import CheckoutPage from './checkout/CheckoutPage'
-import OrderSuccess from './checkout/OrderSuccess'
-import CartDrawer from './cart/CartDrawer'
-import ErrorBoundary from './ErrorBoundary'
+import React from 'react';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { AdminProvider } from '../contexts/AdminContext';
+import { AuthProvider } from '../contexts/AuthContext';
+import { LanguageProvider } from '../contexts/LanguageContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { CartProvider } from '../contexts/CartContext';
+import SuspenseWrapper from './Suspense';
+import ErrorBoundary from './ErrorBoundary';
 
-const AppWrapper = () => {
+// Lazy load components
+const LoginPage = React.lazy(() => import('./auth/LoginPage'));
+const ProtectedRoute = React.lazy(() => import('./auth/ProtectedRoute'));
+const MainApp = React.lazy(() => import('./MainApp'));
+const AdminLogin = React.lazy(() => import('./admin/AdminLogin'));
+const AdminDashboard = React.lazy(() => import('./admin/AdminDashboard'));
+const CheckoutPage = React.lazy(() => import('./checkout/CheckoutPage'));
+const OrderSuccess = React.lazy(() => import('./checkout/OrderSuccess'));
+const CartDrawer = React.lazy(() => import('./cart/CartDrawer'));
+
+function AppWrapper() {
   return (
     <ErrorBoundary>
-      <QuestProvider 
-        apiKey={questConfig.APIKEY} 
-        entityId={questConfig.ENTITYID} 
-        apiType="PRODUCTION"
-      >
-        <LanguageProvider>
-          <AuthProvider>
-            <AdminProvider>
-              <ThemeProvider>
-                <CartProvider>
-                  <Router>
+      <AdminProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <CartProvider>
+                <Router>
+                  <SuspenseWrapper>
                     <Routes>
-                      {/* Auth Routes */}
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
-                      
-                      {/* Admin Routes - Always require authentication */}
                       <Route path="/admin" element={<AdminLogin />} />
-                      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                      
-                      {/* E-commerce Routes - Require authentication for checkout */}
-                      <Route path="/checkout" element={<ProtectedRoute requireOnboarding={true}><CheckoutPage /></ProtectedRoute>} />
-                      <Route path="/order-success" element={<ProtectedRoute requireOnboarding={true}><OrderSuccess /></ProtectedRoute>} />
-                      
-                      {/* Main App - Public access, no authentication required */}
+                      <Route
+                        path="/admin/dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/checkout"
+                        element={
+                          <ProtectedRoute>
+                            <CheckoutPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/order-success"
+                        element={
+                          <ProtectedRoute>
+                            <OrderSuccess />
+                          </ProtectedRoute>
+                        }
+                      />
                       <Route path="/" element={<MainApp />} />
-                      
-                      {/* Catch-all route for any other paths - Public access */}
                       <Route path="*" element={<MainApp />} />
                     </Routes>
                     <CartDrawer />
-                  </Router>
-                </CartProvider>
-              </ThemeProvider>
-            </AdminProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </QuestProvider>
+                  </SuspenseWrapper>
+                </Router>
+              </CartProvider>
+            </ThemeProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </AdminProvider>
     </ErrorBoundary>
-  )
+  );
 }
 
-export default AppWrapper
+export default AppWrapper;

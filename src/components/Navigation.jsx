@@ -5,10 +5,10 @@ import SafeIcon from '../common/SafeIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import CartButton from './cart/CartButton';
 
-const { FiMenu, FiX, FiHome, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiUser, FiLogIn, FiLogOut } = FiIcons;
+const { FiMenu, FiX, FiHome, FiMusic, FiImage, FiMic, FiMessageCircle, FiShoppingBag, FiUser, FiLogOut } = FiIcons;
 
 const Navigation = ({ onNavigate, refs }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,18 +35,14 @@ const Navigation = ({ onNavigate, refs }) => {
     setMobileMenuOpen(false);
   };
 
-  const handleLogin = () => {
-    navigate('/login');
+  const handleAdminClick = () => {
+    navigate('/admin');
     setMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     logout();
-    setMobileMenuOpen(false);
-  };
-
-  const handleAdminClick = () => {
-    navigate('/admin');
+    navigate('/');
     setMobileMenuOpen(false);
   };
 
@@ -83,7 +79,7 @@ const Navigation = ({ onNavigate, refs }) => {
             ))}
           </div>
 
-          {/* Right Section: Auth & Cart */}
+          {/* Right Section: Admin & Cart */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
@@ -108,13 +104,13 @@ const Navigation = ({ onNavigate, refs }) => {
               </div>
             ) : (
               <motion.button
-                onClick={handleLogin}
+                onClick={handleAdminClick}
                 className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <SafeIcon icon={FiLogIn} className="text-sm" />
-                <span className="text-sm font-medium hidden sm:inline">Login</span>
+                <SafeIcon icon={FiUser} className="text-sm" />
+                <span className="text-sm font-medium hidden sm:inline">Admin</span>
               </motion.button>
             )}
 

@@ -1,24 +1,17 @@
-// Mock Supabase client to prevent deployment issues
-const mockClient = {
-  from: () => ({
-    select: () => Promise.resolve({ data: [], error: null }),
-    insert: () => Promise.resolve({ data: null, error: null }),
-    update: () => Promise.resolve({ data: null, error: null }),
-    delete: () => Promise.resolve({ data: null, error: null }),
-    upsert: () => Promise.resolve({ data: null, error: null })
-  }),
-  auth: {
-    signIn: () => Promise.resolve({ user: null, error: null }),
-    signOut: () => Promise.resolve({ error: null }),
-    getUser: () => Promise.resolve({ user: null, error: null }),
-    signUp: () => Promise.resolve({ user: null, error: null })
-  },
-  storage: {
-    from: () => ({
-      upload: () => Promise.resolve({ data: null, error: null }),
-      download: () => Promise.resolve({ data: null, error: null })
-    })
-  }
-};
+import { createClient } from '@supabase/supabase-js'
 
-export default mockClient;
+const SUPABASE_URL = 'https://sehuiuzmmmrbgokhlhfl.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlaHVpdXptbW1yYmdva2hsaGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MTg0MTgsImV4cCI6MjA2NzQ5NDQxOH0.DqhCo3_4psc1k5ZezL9AoM4nddFhcDy4rUp6QgPpqG8'
+
+if (SUPABASE_URL == 'https://<PROJECT-ID>.supabase.co' || SUPABASE_ANON_KEY == '<ANON_KEY>') {
+  throw new Error('Missing Supabase variables')
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+})
+
+export default supabase
