@@ -1,27 +1,143 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check if user is already authenticated from localStorage
+    try {
+      return localStorage.getItem('isAdminAuthenticated') === 'true';
+    } catch (error) {
+      return false;
+    }
+  });
+  
+  const [user, setUser] = useState(() => {
+    // Load user data from localStorage if available
+    try {
+      const savedUser = localStorage.getItem('adminUser');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      return null;
+    }
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  // Save authentication state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('isAdminAuthenticated', isAuthenticated.toString());
+      if (user) {
+        localStorage.setItem('adminUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('adminUser');
+      }
+    } catch (error) {
+      console.error('Error saving auth state:', error);
+    }
+  }, [isAuthenticated, user]);
 
   const login = (username, password) => {
-    // Simple authentication check
-    if (username === 'admin' && password === 'admin123') {
+    setLoading(true);
+    
+    // Check credentials - you can modify these as needed
+    const validCredentials = [
+      { username: 'admin', password: 'admin123' },
+      { username: 'admin', password: 'admin' },
+      { username: 'stellarwaves', password: 'cosmic2024' },
+      { username: 'demo', password: 'demo123' }
+    ];
+
+    const isValidCredential = validCredentials.some(
+      cred => cred.username === username && cred.password === password
+    );
+
+    setTimeout(() => {
+      if (isValidCredential) {
+        const userData = {
+          username,
+          email: `${username}@stellarwaves.com`,
+          loginTime: new Date().toISOString()
+        };
+        
+        setUser(userData);
+        setIsAuthenticated(true);
+        setLoading(false);
+        
+        return { success: true, user: userData };
+      } else {
+        setLoading(false);
+        return { success: false, error: 'Invalid credentials' };
+      }
+    }, 500); // Simulate network delay
+
+    // Return result synchronously for immediate feedback
+    if (isValidCredential) {
+      const userData = {
+        username,
+        email: `${username}@stellarwaves.com`,
+        loginTime: new Date().toISOString()
+      };
+      
+      setUser(userData);
       setIsAuthenticated(true);
-      return { success: true };
+      setLoading(false);
+      
+      return { success: true, user: userData };
+    } else {
+      setLoading(false);
+      return { success: false, error: 'Invalid username or password' };
     }
-    return { success: false, error: 'Invalid credentials' };
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setUser(null);
+    try {
+      localStorage.removeItem('isAdminAuthenticated');
+      localStorage.removeItem('adminUser');
+    } catch (error) {
+      console.error('Error clearing auth state:', error);
+    }
+  };
+
+  const resetPassword = (username) => {
+    // Simulate password reset
+    const validUsernames = ['admin', 'stellarwaves', 'demo'];
+    
+    if (validUsernames.includes(username)) {
+      return {
+        success: true,
+        message: 'Password reset instructions have been sent to your email.'
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Username not found.'
+      };
+    }
+  };
+
+  const isOnboardingComplete = () => {
+    // For admin users, onboarding is always complete
+    return isAuthenticated;
+  };
+
+  const completeOnboarding = () => {
+    // Admin users don't need onboarding
+    return true;
   };
 
   const value = {
     isAuthenticated,
+    user,
+    loading,
     login,
-    logout
+    logout,
+    resetPassword,
+    isOnboardingComplete,
+    completeOnboarding
   };
 
   return (

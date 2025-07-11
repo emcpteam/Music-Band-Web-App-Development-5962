@@ -14,9 +14,9 @@ const Navigation = ({ onNavigate, refs }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const { data } = useAdmin();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
-  
+
   // Get section visibility settings
   const { sectionVisibility } = data.band;
 
@@ -36,7 +36,11 @@ const Navigation = ({ onNavigate, refs }) => {
   };
 
   const handleAdminClick = () => {
-    navigate('/admin');
+    if (isAuthenticated) {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/admin');
+    }
     setMobileMenuOpen(false);
   };
 
@@ -54,7 +58,9 @@ const Navigation = ({ onNavigate, refs }) => {
           <div className="flex items-center">
             <motion.div
               className="w-10 h-10 rounded-full flex items-center justify-center mr-2"
-              style={{ background: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))` }}
+              style={{
+                background: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`
+              }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -88,15 +94,20 @@ const Navigation = ({ onNavigate, refs }) => {
                   className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  title={`Logged in as ${user?.username || 'Admin'}`}
                 >
                   <SafeIcon icon={FiUser} className="text-sm" />
-                  <span className="text-sm font-medium hidden sm:inline">Admin</span>
+                  <span className="text-sm font-medium hidden sm:inline">
+                    {user?.username || 'Admin'}
+                  </span>
                 </motion.button>
+                
                 <motion.button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  title="Logout"
                 >
                   <SafeIcon icon={FiLogOut} className="text-sm" />
                   <span className="text-sm font-medium hidden sm:inline">Logout</span>
@@ -136,7 +147,10 @@ const Navigation = ({ onNavigate, refs }) => {
       <motion.div
         className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}
         initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: mobileMenuOpen ? 1 : 0, height: mobileMenuOpen ? 'auto' : 0 }}
+        animate={{
+          opacity: mobileMenuOpen ? 1 : 0,
+          height: mobileMenuOpen ? 'auto' : 0
+        }}
         transition={{ duration: 0.3 }}
       >
         <div className="px-2 pt-2 pb-4 bg-white/90 backdrop-blur-md shadow-lg">
@@ -153,6 +167,40 @@ const Navigation = ({ onNavigate, refs }) => {
                 <span className="font-medium">{item.label}</span>
               </motion.button>
             ))}
+            
+            {/* Mobile Admin/Logout buttons */}
+            {isAuthenticated ? (
+              <>
+                <motion.button
+                  onClick={handleAdminClick}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors"
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <SafeIcon icon={FiUser} className="text-lg" />
+                  <span className="font-medium">Dashboard ({user?.username})</span>
+                </motion.button>
+                <motion.button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <SafeIcon icon={FiLogOut} className="text-lg" />
+                  <span className="font-medium">Logout</span>
+                </motion.button>
+              </>
+            ) : (
+              <motion.button
+                onClick={handleAdminClick}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors"
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={FiUser} className="text-lg" />
+                <span className="font-medium">Admin Login</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.div>

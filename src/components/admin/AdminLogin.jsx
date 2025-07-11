@@ -4,20 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '../../common/SafeIcon';
 import { useAdmin } from '../../contexts/AdminContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 
 const { FiLock, FiUser, FiEye, FiEyeOff, FiArrowLeft, FiRefreshCw } = FiIcons;
 
 const AdminLogin = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetUsername, setResetUsername] = useState('');
   const [resetMessage, setResetMessage] = useState('');
-  const { login, resetPassword } = useAdmin();
+
+  const { login, resetPassword } = useAuth();
+  const { data } = useAdmin();
   const { ta } = useLanguage();
   const navigate = useNavigate();
 
@@ -26,15 +32,22 @@ const AdminLogin = () => {
     setLoading(true);
     setError('');
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const result = login(formData.username, formData.password);
-    if (result.success) {
-      navigate('/admin/dashboard');
-    } else {
-      setError('Invalid username or password');
+    try {
+      const result = login(formData.username, formData.password);
+      
+      if (result.success) {
+        // Navigate to dashboard
+        setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 100);
+      } else {
+        setError(result.error || 'Invalid username or password');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login');
     }
+
     setLoading(false);
   };
 
@@ -53,8 +66,9 @@ const AdminLogin = () => {
       // Auto-fill the username for convenience
       setFormData(prev => ({ ...prev, username: resetUsername }));
     } else {
-      setResetMessage('Username not found');
+      setResetMessage(result.message);
     }
+
     setLoading(false);
   };
 
@@ -69,7 +83,7 @@ const AdminLogin = () => {
           <div className="flex justify-between items-center mb-6">
             <LanguageSelector />
           </div>
-
+          
           <motion.div
             className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -225,6 +239,16 @@ const AdminLogin = () => {
               {loading ? ta('loading') : 'Login to Dashboard'}
             </motion.button>
           </form>
+
+          {/* Demo Credentials Info */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2">Demo Credentials</h4>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p><strong>Username:</strong> admin</p>
+              <p><strong>Password:</strong> admin123</p>
+              <p className="mt-2 text-blue-600">Or try: demo / demo123</p>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>

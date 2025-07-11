@@ -39,7 +39,7 @@ const ProtectedRoute = ({ children, requireOnboarding = false }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/admin" state={{ from: location }} replace />;
   }
 
   if (requireOnboarding && !isOnboardingComplete()) {
