@@ -9,21 +9,68 @@ const { FiPalette, FiSave, FiRotateCcw, FiEye, FiRefreshCw, FiImage, FiFolder, F
 
 const ThemeCustomizer = () => {
   const { data, updateTheme } = useAdmin();
-  const [theme, setTheme] = useState(data.theme);
+  const [theme, setTheme] = useState(data.theme || {});
   const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(Date.now());
   const [showFileSelector, setShowFileSelector] = useState(false);
 
+  // Initialize theme with data when component mounts
+  useEffect(() => {
+    if (data.theme) {
+      setTheme(data.theme);
+    }
+  }, [data.theme]);
+
   const colorPresets = [
-    { name: 'Cosmic Purple', primaryColor: '#8B5CF6', secondaryColor: '#EC4899', accentColor: '#06B6D4' },
-    { name: 'Ocean Blue', primaryColor: '#3B82F6', secondaryColor: '#10B981', accentColor: '#F59E0B' },
-    { name: 'Sunset Orange', primaryColor: '#F97316', secondaryColor: '#EF4444', accentColor: '#8B5CF6' },
-    { name: 'Forest Green', primaryColor: '#10B981', secondaryColor: '#059669', accentColor: '#F59E0B' },
-    { name: 'Royal Purple', primaryColor: '#7C3AED', secondaryColor: '#DB2777', accentColor: '#059669' },
-    { name: 'Electric Blue', primaryColor: '#0EA5E9', secondaryColor: '#8B5CF6', accentColor: '#F59E0B' },
-    { name: 'Neon Pink', primaryColor: '#EC4899', secondaryColor: '#F59E0B', accentColor: '#06B6D4' },
-    { name: 'Midnight Blue', primaryColor: '#1E40AF', secondaryColor: '#7C3AED', accentColor: '#10B981' }
+    {
+      name: 'Cosmic Purple',
+      primaryColor: '#8B5CF6',
+      secondaryColor: '#EC4899',
+      accentColor: '#06B6D4'
+    },
+    {
+      name: 'Ocean Blue',
+      primaryColor: '#3B82F6',
+      secondaryColor: '#10B981',
+      accentColor: '#F59E0B'
+    },
+    {
+      name: 'Sunset Orange',
+      primaryColor: '#F97316',
+      secondaryColor: '#EF4444',
+      accentColor: '#8B5CF6'
+    },
+    {
+      name: 'Forest Green',
+      primaryColor: '#10B981',
+      secondaryColor: '#059669',
+      accentColor: '#F59E0B'
+    },
+    {
+      name: 'Royal Purple',
+      primaryColor: '#7C3AED',
+      secondaryColor: '#DB2777',
+      accentColor: '#059669'
+    },
+    {
+      name: 'Electric Blue',
+      primaryColor: '#0EA5E9',
+      secondaryColor: '#8B5CF6',
+      accentColor: '#F59E0B'
+    },
+    {
+      name: 'Neon Pink',
+      primaryColor: '#EC4899',
+      secondaryColor: '#F59E0B',
+      accentColor: '#06B6D4'
+    },
+    {
+      name: 'Midnight Blue',
+      primaryColor: '#1E40AF',
+      secondaryColor: '#7C3AED',
+      accentColor: '#10B981'
+    }
   ];
 
   const fontOptions = [
@@ -81,7 +128,7 @@ const ThemeCustomizer = () => {
       root.style.setProperty('--theme-background', theme.backgroundColor);
       root.style.setProperty('--theme-text', theme.textColor);
       root.style.setProperty('--theme-font-family', theme.fontFamily);
-
+      
       // Hero background settings
       root.style.setProperty('--theme-hero-bg-image', theme.heroBackgroundImage || '');
       root.style.setProperty('--theme-hero-bg-type', theme.heroBackgroundType || 'gradient');
@@ -95,10 +142,10 @@ const ThemeCustomizer = () => {
       // Advanced gradient settings
       root.style.setProperty('--theme-gradient-direction', theme.gradientDirection || '45deg');
       root.style.setProperty('--theme-gradient-pattern', theme.gradientPattern || 'linear');
-
+      
       // Apply font family to body for live preview
       document.body.style.fontFamily = theme.fontFamily;
-
+      
       // Create RGB values for transparency effects
       const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -108,17 +155,17 @@ const ThemeCustomizer = () => {
           b: parseInt(result[3], 16)
         } : null;
       };
-
+      
       const primaryRgb = hexToRgb(theme.primaryColor);
       const secondaryRgb = hexToRgb(theme.secondaryColor);
       const accentRgb = hexToRgb(theme.accentColor);
-
+      
       if (primaryRgb && secondaryRgb && accentRgb) {
         root.style.setProperty('--theme-primary-rgb', `${primaryRgb.r},${primaryRgb.g},${primaryRgb.b}`);
         root.style.setProperty('--theme-secondary-rgb', `${secondaryRgb.r},${secondaryRgb.g},${secondaryRgb.b}`);
         root.style.setProperty('--theme-accent-rgb', `${accentRgb.r},${accentRgb.g},${accentRgb.b}`);
       }
-
+      
       // Force re-render of components that use theme
       window.dispatchEvent(new CustomEvent('themePreviewUpdate', {
         detail: { theme, timestamp: Date.now() }
@@ -127,15 +174,24 @@ const ThemeCustomizer = () => {
   }, [theme]);
 
   const handleColorChange = (field, value) => {
-    setTheme(prev => ({ ...prev, [field]: value }));
+    setTheme(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleHeroBackgroundChange = (field, value) => {
-    setTheme(prev => ({ ...prev, [field]: value }));
+    setTheme(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const applyPreset = (preset) => {
-    setTheme(prev => ({ ...prev, ...preset }));
+    setTheme(prev => ({
+      ...prev,
+      ...preset
+    }));
   };
 
   const handleSave = async () => {
@@ -163,12 +219,14 @@ const ThemeCustomizer = () => {
       heroTitleStyle: "gradient",
       heroTitleShadow: true
     };
+    
     setTheme(defaultTheme);
   };
 
   const refreshPreview = () => {
     // Force a re-render of the preview
     setLastSaved(Date.now());
+    
     // Trigger theme update event
     window.dispatchEvent(new CustomEvent('themePreviewUpdate', {
       detail: { theme, timestamp: Date.now() }
@@ -176,7 +234,10 @@ const ThemeCustomizer = () => {
   };
 
   const handleFileSelect = (file) => {
-    setTheme(prev => ({ ...prev, heroBackgroundImage: file.url }));
+    setTheme(prev => ({
+      ...prev,
+      heroBackgroundImage: file.url
+    }));
   };
 
   const handleImageUpload = (e) => {
@@ -187,17 +248,20 @@ const ThemeCustomizer = () => {
         alert('Please select an image file');
         return;
       }
-
+      
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         alert('Image size should be less than 10MB');
         return;
       }
-
+      
       const reader = new FileReader();
       reader.onload = (event) => {
         const imageUrl = event.target.result;
-        setTheme(prev => ({ ...prev, heroBackgroundImage: imageUrl }));
+        setTheme(prev => ({
+          ...prev,
+          heroBackgroundImage: imageUrl
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -265,6 +329,7 @@ const ThemeCustomizer = () => {
     >
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Theme Customizer</h1>
+        
         <div className="flex items-center space-x-4">
           <motion.button
             onClick={refreshPreview}
@@ -276,12 +341,11 @@ const ThemeCustomizer = () => {
             <SafeIcon icon={FiRefreshCw} />
             <span>Refresh</span>
           </motion.button>
+          
           <motion.button
             onClick={() => setPreviewMode(!previewMode)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all ${
-              previewMode 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+              previewMode ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -309,18 +373,9 @@ const ThemeCustomizer = () => {
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="flex space-x-1">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.primaryColor }} 
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.secondaryColor }} 
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: preset.accentColor }} 
-                      />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primaryColor }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.secondaryColor }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accentColor }} />
                     </div>
                   </div>
                   <p className="text-sm font-medium text-gray-700">{preset.name}</p>
@@ -328,7 +383,7 @@ const ThemeCustomizer = () => {
               ))}
             </div>
           </div>
-
+          
           {/* Custom Colors */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Custom Colors</h2>
@@ -353,6 +408,7 @@ const ThemeCustomizer = () => {
                     />
                   </div>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Secondary Color
@@ -373,6 +429,7 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -393,6 +450,7 @@ const ThemeCustomizer = () => {
                     />
                   </div>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Text Color
@@ -413,26 +471,27 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               </div>
-
+              
               {/* Gradient Preview */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Gradient Preview
                 </label>
-                <div 
+                <div
                   className="w-full h-16 rounded-xl border-2 border-gray-200"
                   style={{ background: generateGradientPreview() }}
                 />
               </div>
             </div>
           </div>
-
+          
           {/* Hero Title Customization */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
               <SafeIcon icon={FiType} className="mr-2" />
               Hero Title Style
             </h2>
+            
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -453,7 +512,7 @@ const ThemeCustomizer = () => {
                   Auto: Uses gradient on plain backgrounds, white on images
                 </p>
               </div>
-
+              
               {theme.heroTitleStyle === 'solid' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -475,7 +534,7 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               )}
-
+              
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -488,24 +547,21 @@ const ThemeCustomizer = () => {
                   Add text shadow for better readability
                 </label>
               </div>
-
+              
               {/* Title Style Preview */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title Style Preview
                 </label>
                 <div className="p-4 bg-gray-900 rounded-xl text-center">
-                  <h3 
-                    className="text-2xl font-bold"
-                    style={getHeroTitleStyle()}
-                  >
+                  <h3 className="text-2xl font-bold" style={getHeroTitleStyle()}>
                     Band Name
                   </h3>
                 </div>
               </div>
             </div>
           </div>
-
+          
           {/* Gradient Settings */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Gradient Settings</h2>
@@ -527,6 +583,7 @@ const ThemeCustomizer = () => {
                     ))}
                   </select>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Gradient Direction
@@ -546,13 +603,14 @@ const ThemeCustomizer = () => {
               </div>
             </div>
           </div>
-
+          
           {/* Hero Background Customization */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
               <SafeIcon icon={FiImage} className="mr-2" />
               Hero Background
             </h2>
+            
             {/* Background Type Selection */}
             <div className="space-y-4">
               <div>
@@ -571,13 +629,14 @@ const ThemeCustomizer = () => {
                   ))}
                 </select>
               </div>
-
+              
               {/* Background Image Upload/Selection */}
               {(theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Background Image
                   </label>
+                  
                   {/* Image Upload Options */}
                   <div className="space-y-4">
                     {/* Direct Upload */}
@@ -595,7 +654,7 @@ const ThemeCustomizer = () => {
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB (1920x1080 recommended)</p>
                       </label>
                     </div>
-
+                    
                     {/* URL Input */}
                     <div className="flex items-center space-x-4">
                       <input
@@ -615,7 +674,7 @@ const ThemeCustomizer = () => {
                         <SafeIcon icon={FiFolder} />
                       </motion.button>
                     </div>
-
+                    
                     {/* Image Preview */}
                     {theme.heroBackgroundImage && (
                       <div className="mt-4">
@@ -642,7 +701,7 @@ const ThemeCustomizer = () => {
                   </div>
                 </div>
               )}
-
+              
               {/* Overlay Opacity (for overlay type) */}
               {theme.heroBackgroundType === 'overlay' && (
                 <div>
@@ -666,7 +725,7 @@ const ThemeCustomizer = () => {
               )}
             </div>
           </div>
-
+          
           {/* Typography */}
           <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Typography</h2>
@@ -687,7 +746,7 @@ const ThemeCustomizer = () => {
               </select>
             </div>
           </div>
-
+          
           {/* Action Buttons */}
           <div className="flex items-center space-x-4">
             <motion.button
@@ -696,13 +755,12 @@ const ThemeCustomizer = () => {
               className="flex items-center space-x-2 px-6 py-3 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{
-                backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-              }}
+              style={{ backgroundImage: `linear-gradient(45deg, ${theme.primaryColor}, ${theme.secondaryColor})` }}
             >
               <SafeIcon icon={FiSave} />
               <span>{isSaving ? 'Saving...' : 'Save Theme'}</span>
             </motion.button>
+            
             <motion.button
               onClick={resetToDefault}
               className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors"
@@ -714,20 +772,16 @@ const ThemeCustomizer = () => {
             </motion.button>
           </div>
         </div>
-
+        
         {/* Live Preview */}
         <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Live Preview</h2>
-          <div 
+          <div
             className="p-6 rounded-xl border-2 border-gray-200 min-h-[500px] relative overflow-hidden"
             style={{
               fontFamily: theme.fontFamily,
-              ...(theme.heroBackgroundType === 'gradient' && {
-                background: generateGradientPreview()
-              }),
-              ...(theme.heroBackgroundType === 'pattern' && {
-                background: generateGradientPreview()
-              }),
+              ...(theme.heroBackgroundType === 'gradient' && { background: generateGradientPreview() }),
+              ...(theme.heroBackgroundType === 'pattern' && { background: generateGradientPreview() }),
               ...(theme.heroBackgroundType === 'animated' && {
                 background: `linear-gradient(${theme.gradientDirection || '45deg'}, ${theme.primaryColor}, ${theme.secondaryColor})`,
                 animation: 'gradient-shift 3s ease-in-out infinite'
@@ -749,37 +803,30 @@ const ThemeCustomizer = () => {
           >
             {/* Preview Header */}
             <div className="text-center mb-6 relative z-10">
-              <div 
+              <div
                 className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{
-                  background: generateGradientPreview()
-                }}
+                style={{ background: generateGradientPreview() }}
               >
                 <SafeIcon icon={FiPalette} className="text-white text-xl" />
               </div>
-              <h1 
-                className="text-2xl font-bold mb-2"
-                style={getHeroTitleStyle()}
-              >
+              <h1 className="text-2xl font-bold mb-2" style={getHeroTitleStyle()}>
                 Band Name
               </h1>
-              <p 
-                className="text-gray-600" 
-                style={{ 
-                  color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined 
+              <p
+                className="text-gray-600"
+                style={{
+                  color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined
                 }}
               >
                 Album Title - Preview
               </p>
             </div>
-
+            
             {/* Preview Buttons */}
             <div className="space-y-3 mb-6 relative z-10">
               <button
                 className="w-full py-3 rounded-xl text-white font-medium transition-all hover:shadow-lg"
-                style={{
-                  background: generateGradientPreview()
-                }}
+                style={{ background: generateGradientPreview() }}
               >
                 Primary Button
               </button>
@@ -790,29 +837,26 @@ const ThemeCustomizer = () => {
                 Accent Button
               </button>
             </div>
-
+            
             {/* Preview Content Card */}
-            <div 
+            <div
               className="p-4 rounded-xl mb-4 relative z-10"
-              style={{ 
-                backgroundColor: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' 
-                  ? 'rgba(255,255,255,0.9)' 
-                  : `${theme.primaryColor}10` 
+              style={{
+                backgroundColor: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.9)' : `${theme.primaryColor}10`
               }}
             >
               <h3 className="font-semibold mb-2" style={{ color: theme.textColor }}>
                 Sample Content
               </h3>
               <p style={{ color: theme.textColor }}>
-                This is how your text content will look with the selected theme colors and typography. 
-                The font family applied is {theme.fontFamily}.
+                This is how your text content will look with the selected theme colors and typography. The font family applied is {theme.fontFamily}.
               </p>
             </div>
-
+            
             {/* Preview Music Player */}
             <div className="bg-white/80 rounded-xl p-4 relative z-10">
               <div className="flex items-center space-x-4 mb-3">
-                <div 
+                <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: theme.primaryColor }}
                 >
@@ -826,49 +870,38 @@ const ThemeCustomizer = () => {
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                <div 
+                <div
                   className="h-2 rounded-full transition-all duration-300"
-                  style={{
-                    background: generateGradientPreview(),
-                    width: '35%'
-                  }}
+                  style={{ background: generateGradientPreview(), width: '35%' }}
                 />
               </div>
               <div className="flex justify-center space-x-4">
-                <button 
+                <button
                   className="p-2 rounded-full"
-                  style={{
-                    backgroundColor: `${theme.primaryColor}20`,
-                    color: theme.primaryColor
-                  }}
+                  style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}
                 >
                   ⏮
                 </button>
-                <button 
+                <button
                   className="p-3 rounded-full text-white"
-                  style={{
-                    background: generateGradientPreview()
-                  }}
+                  style={{ background: generateGradientPreview() }}
                 >
                   ▶
                 </button>
-                <button 
+                <button
                   className="p-2 rounded-full"
-                  style={{
-                    backgroundColor: `${theme.primaryColor}20`,
-                    color: theme.primaryColor
-                  }}
+                  style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}
                 >
                   ⏭
                 </button>
               </div>
             </div>
-
+            
             {/* Theme Info */}
-            <div 
-              className="mt-6 text-xs text-gray-500 space-y-1 relative z-10" 
-              style={{ 
-                color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined 
+            <div
+              className="mt-6 text-xs text-gray-500 space-y-1 relative z-10"
+              style={{
+                color: theme.heroBackgroundType === 'image' || theme.heroBackgroundType === 'overlay' ? 'rgba(255,255,255,0.8)' : undefined
               }}
             >
               <p><strong>Primary:</strong> {theme.primaryColor}</p>
@@ -882,7 +915,7 @@ const ThemeCustomizer = () => {
           </div>
         </div>
       </div>
-
+      
       {/* File Selector */}
       <FileSelector
         isOpen={showFileSelector}
@@ -891,7 +924,7 @@ const ThemeCustomizer = () => {
         fileTypes={['image']}
         title="Select Hero Background Image"
       />
-
+      
       {/* Add CSS for animated gradients */}
       <style jsx>{`
         @keyframes gradient-shift {

@@ -18,9 +18,8 @@ const MainApp = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const { themeUpdateTrigger } = useAdmin();
   const { data } = useAdmin();
-  
   const audioRef = useRef(null);
-  
+
   // Refs for navigation
   const heroRef = useRef(null);
   const musicRef = useRef(null);
@@ -31,7 +30,7 @@ const MainApp = () => {
 
   // Get section visibility settings from data
   const { sectionVisibility } = data.band;
-  
+
   // Function to scroll to a specific section
   const scrollToSection = (ref) => {
     if (ref && ref.current) {
@@ -48,17 +47,21 @@ const MainApp = () => {
         refs={{ heroRef, musicRef, bookletRef, podcastRef, fanWallRef, merchRef }}
       />
       
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
         <section ref={heroRef}>
           <Hero onPlayClick={() => scrollToSection(musicRef)} />
         </section>
         
         <section ref={musicRef}>
-          <MusicPlayer 
-            currentTrack={currentTrack} 
-            setCurrentTrack={setCurrentTrack} 
-            isPlaying={isPlaying} 
-            setIsPlaying={setIsPlaying} 
+          <MusicPlayer
+            currentTrack={currentTrack}
+            setCurrentTrack={setCurrentTrack}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
             audioRef={audioRef}
           />
         </section>

@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
       return false;
     }
   });
-  
+
   const [user, setUser] = useState(() => {
     // Load user data from localStorage if available
     try {
@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
   const login = (username, password) => {
     setLoading(true);
     
-    // Check credentials - you can modify these as needed
+    // Simple credential check - hardcoded for demo
     const validCredentials = [
       { username: 'admin', password: 'admin123' },
       { username: 'admin', password: 'admin' },
@@ -53,26 +53,6 @@ export function AuthProvider({ children }) {
       cred => cred.username === username && cred.password === password
     );
 
-    setTimeout(() => {
-      if (isValidCredential) {
-        const userData = {
-          username,
-          email: `${username}@stellarwaves.com`,
-          loginTime: new Date().toISOString()
-        };
-        
-        setUser(userData);
-        setIsAuthenticated(true);
-        setLoading(false);
-        
-        return { success: true, user: userData };
-      } else {
-        setLoading(false);
-        return { success: false, error: 'Invalid credentials' };
-      }
-    }, 500); // Simulate network delay
-
-    // Return result synchronously for immediate feedback
     if (isValidCredential) {
       const userData = {
         username,
@@ -102,28 +82,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const resetPassword = (username) => {
-    // Simulate password reset
-    const validUsernames = ['admin', 'stellarwaves', 'demo'];
-    
-    if (validUsernames.includes(username)) {
-      return {
-        success: true,
-        message: 'Password reset instructions have been sent to your email.'
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Username not found.'
-      };
-    }
-  };
-
-  const isOnboardingComplete = () => {
-    // For admin users, onboarding is always complete
-    return isAuthenticated;
-  };
-
   const completeOnboarding = () => {
     // Admin users don't need onboarding
     return true;
@@ -135,8 +93,6 @@ export function AuthProvider({ children }) {
     loading,
     login,
     logout,
-    resetPassword,
-    isOnboardingComplete,
     completeOnboarding
   };
 

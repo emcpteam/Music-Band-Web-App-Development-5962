@@ -1,22 +1,27 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { AdminProvider } from '../contexts/AdminContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { CartProvider } from '../contexts/CartContext';
-import SuspenseWrapper from './Suspense';
 import ErrorBoundary from './ErrorBoundary';
 
-// Lazy load components
-const LoginPage = React.lazy(() => import('./auth/LoginPage'));
-const ProtectedRoute = React.lazy(() => import('./auth/ProtectedRoute'));
-const MainApp = React.lazy(() => import('./MainApp'));
-const AdminLogin = React.lazy(() => import('./admin/AdminLogin'));
-const AdminDashboard = React.lazy(() => import('./admin/AdminDashboard'));
-const CheckoutPage = React.lazy(() => import('./checkout/CheckoutPage'));
-const OrderSuccess = React.lazy(() => import('./checkout/OrderSuccess'));
-const CartDrawer = React.lazy(() => import('./cart/CartDrawer'));
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
+  </div>
+);
+
+// Import components directly to avoid suspense issues with nested lazy loading
+import MainApp from './MainApp';
+import AdminLogin from './auth/AdminLogin';
+import AdminDashboard from './admin/AdminDashboard';
+import CheckoutPage from './checkout/CheckoutPage';
+import OrderSuccess from './checkout/OrderSuccess';
+import CartDrawer from './cart/CartDrawer';
+import ProtectedRoute from './auth/ProtectedRoute';
 
 function AppWrapper() {
   return (
@@ -27,38 +32,33 @@ function AppWrapper() {
             <ThemeProvider>
               <CartProvider>
                 <Router>
-                  <SuspenseWrapper>
-                    <Routes>
-                      <Route path="/admin" element={<AdminLogin />} />
-                      <Route
-                        path="/admin/dashboard"
-                        element={
-                          <ProtectedRoute>
-                            <AdminDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/checkout"
-                        element={
-                          <ProtectedRoute>
-                            <CheckoutPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/order-success"
-                        element={
-                          <ProtectedRoute>
-                            <OrderSuccess />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route path="/" element={<MainApp />} />
-                      <Route path="*" element={<MainApp />} />
-                    </Routes>
-                    <CartDrawer />
-                  </SuspenseWrapper>
+                  <Routes>
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={<AdminLogin />} />
+                    <Route path="/admin/dashboard/*" element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Checkout Routes */}
+                    <Route path="/checkout" element={
+                      <ProtectedRoute>
+                        <CheckoutPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/order-success" element={
+                      <ProtectedRoute>
+                        <OrderSuccess />
+                      </ProtectedRoute>
+                    } />
+
+                    {/* Main Site Routes */}
+                    <Route path="/" element={<MainApp />} />
+                    <Route path="*" element={<MainApp />} />
+                  </Routes>
+                  
+                  <CartDrawer />
                 </Router>
               </CartProvider>
             </ThemeProvider>

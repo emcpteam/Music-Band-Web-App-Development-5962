@@ -58,11 +58,10 @@ const Navigation = ({ onNavigate, refs }) => {
           <div className="flex items-center">
             <motion.div
               className="w-10 h-10 rounded-full flex items-center justify-center mr-2"
-              style={{
-                background: `linear-gradient(45deg, var(--theme-primary), var(--theme-secondary))`
-              }}
+              style={{ background: `linear-gradient(45deg,var(--theme-primary),var(--theme-secondary))` }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => onNavigate(refs.heroRef)}
             >
               <SafeIcon icon={FiMusic} className="text-white text-lg" />
             </motion.div>
@@ -101,7 +100,6 @@ const Navigation = ({ onNavigate, refs }) => {
                     {user?.username || 'Admin'}
                   </span>
                 </motion.button>
-                
                 <motion.button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors"
@@ -147,10 +145,7 @@ const Navigation = ({ onNavigate, refs }) => {
       <motion.div
         className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}
         initial={{ opacity: 0, height: 0 }}
-        animate={{
-          opacity: mobileMenuOpen ? 1 : 0,
-          height: mobileMenuOpen ? 'auto' : 0
-        }}
+        animate={{ opacity: mobileMenuOpen ? 1 : 0, height: mobileMenuOpen ? 'auto' : 0 }}
         transition={{ duration: 0.3 }}
       >
         <div className="px-2 pt-2 pb-4 bg-white/90 backdrop-blur-md shadow-lg">
@@ -167,7 +162,7 @@ const Navigation = ({ onNavigate, refs }) => {
                 <span className="font-medium">{item.label}</span>
               </motion.button>
             ))}
-            
+
             {/* Mobile Admin/Logout buttons */}
             {isAuthenticated ? (
               <>

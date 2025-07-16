@@ -69,6 +69,7 @@ const translations = {
     update: 'Update',
     close: 'Close'
   },
+  
   it: {
     // Navigation
     home: 'Home',
@@ -159,6 +160,7 @@ const adminTranslations = {
     comments: 'Comments',
     translationManager: 'Translation Manager',
     accountSettings: 'Account Settings',
+    systemConfiguration: 'System Configuration',
     adminPanel: 'Admin Panel',
     logout: 'Logout',
     
@@ -192,6 +194,7 @@ const adminTranslations = {
     resetInstructions: 'Enter your username to receive password reset instructions',
     sendResetLink: 'Send Reset Link'
   },
+  
   it: {
     // Dashboard
     dashboardOverview: 'Panoramica Dashboard',
@@ -221,6 +224,7 @@ const adminTranslations = {
     comments: 'Commenti',
     translationManager: 'Gestore Traduzioni',
     accountSettings: 'Impostazioni Account',
+    systemConfiguration: 'Configurazione Sistema',
     adminPanel: 'Pannello Admin',
     logout: 'Esci',
     
@@ -259,9 +263,10 @@ const adminTranslations = {
 export const LanguageProvider = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState(() => {
     try {
+      // Default to Italian
       return localStorage.getItem('selectedLanguage') || 'it';
     } catch (error) {
-      return 'it';
+      return 'it'; // Default to Italian if localStorage fails
     }
   });
 

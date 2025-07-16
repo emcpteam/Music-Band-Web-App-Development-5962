@@ -16,7 +16,7 @@ const renderApp = () => {
     console.error('Failed to render app:', error)
     // Render fallback UI
     document.getElementById('root').innerHTML = `
-      <div style="padding: 20px; text-align: center;">
+      <div style="padding: 20px;text-align: center;">
         <h1>Something went wrong</h1>
         <p>Please try refreshing the page</p>
       </div>
